@@ -28,7 +28,8 @@
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
       "Bash(git check-ignore:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(/tmp/drogonsec:*)"
     ]
   }
 }
