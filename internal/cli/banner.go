@@ -11,8 +11,23 @@ import (
 // ansiRE strips ANSI escape codes so we can measure true visual width.
 var ansiRE = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
+// runeWidth returns the terminal display column-width for a single rune.
+// Block elements (█ etc.) and box-drawing characters are single-width in
+// standard terminals. Only true East Asian wide characters are double-width,
+// but we don't use them in this banner.
+func runeWidth(r rune) int {
+	return 1
+}
+
+// visualLen returns the true terminal display width of s after stripping
+// ANSI escape codes and accounting for double-wide block-element chars.
 func visualLen(s string) int {
-	return len([]rune(ansiRE.ReplaceAllString(s, "")))
+	plain := ansiRE.ReplaceAllString(s, "")
+	w := 0
+	for _, r := range plain {
+		w += runeWidth(r)
+	}
+	return w
 }
 
 // padTo right-pads s with spaces until its visual width equals w.
@@ -68,16 +83,13 @@ func PrintDragonBanner() {
 			dim("  │  SAST · SCA · LEAKS · GIT-HISTORY · IaC")))
 	fmt.Println(midBdr)
 
-	// ── DROGONSEC  — large ASCII title (outside boxLine to avoid double-width
-	//    character misalignment; the ╠═══╣ borders above and below act as frame)
-	fmt.Println()
-	fmt.Println("  " + title(` ██████╗ ██████╗  ██████╗  ██████╗  ██████╗ ███╗  ██╗███████╗███████╗ ██████╗`))
-	fmt.Println("  " + title(` ██╔══██╗██╔══██╗██╔═══██╗██╔════╝ ██╔═══██╗████╗ ██║██╔════╝██╔════╝██╔════╝`))
-	fmt.Println("  " + title(` ██║  ██║██████╔╝██║   ██║██║  ███╗██║   ██║██╔██╗██║███████╗█████╗  ██║     `))
-	fmt.Println("  " + title(` ██║  ██║██╔══██╗██║   ██║██║   ██║██║   ██║██║╚██╗██║╚════██║██╔══╝  ██║     `))
-	fmt.Println("  " + title(` ██████╔╝██║  ██║╚██████╔╝╚██████╔╝╚██████╔╝██║ ╚████║███████║███████╗╚██████╗`))
-	fmt.Println("  " + title(` ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚══════╝ ╚═════╝`))
-	fmt.Println()
+	// ── DROGONSEC — large ASCII title ─────────────────────────────────────────
+	fmt.Println(boxLine(title(` ██████╗ ██████╗  ██████╗  ██████╗  ██████╗ ███╗  ██╗███████╗███████╗ ██████╗`)))
+	fmt.Println(boxLine(title(` ██╔══██╗██╔══██╗██╔═══██╗██╔════╝ ██╔═══██╗████╗ ██║██╔════╝██╔════╝██╔════╝`)))
+	fmt.Println(boxLine(title(` ██║  ██║██████╔╝██║   ██║██║  ███╗██║   ██║██╔██╗██║███████╗█████╗  ██║     `)))
+	fmt.Println(boxLine(title(` ██║  ██║██╔══██╗██║   ██║██║   ██║██║   ██║██║██╗██║╚════██║██╔══╝  ██║     `)))
+	fmt.Println(boxLine(title(` ██████╔╝██║  ██║╚██████╔╝╚██████╔╝╚██████╔╝██║╚████║███████║███████╗╚██████╗`)))
+	fmt.Println(boxLine(title(` ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚═╝ ╚═══╝╚══════╝╚══════╝ ╚═════╝`)))
 
 	// ── Security statement — centered inside frame ────────────────────────────
 	fmt.Println(midBdr)
@@ -100,7 +112,7 @@ func PrintDragonBanner() {
 		nCyan("►") + " " +
 			nYel("Created by Filipi Pires") +
 			dim(" │ v0.1.0 │ OWASP 2025 │ ") +
-			nMag("Maintained: CROSS-INTEL") +
+			nMag("Maintained by: CROSS-INTEL") +
 			" " + nCyan("◄")))
 	fmt.Println(botBdr)
 	fmt.Println()
