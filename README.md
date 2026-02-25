@@ -1,6 +1,6 @@
 # 🛡️ DragonSec Security Scanner
 
-[![CI/CD](https://github.com/drogonsec/drogonsec/workflows/CI%2FCD%20Pipeline/badge.svg)](https://github.com/drogonsec/drogonsec/actions)
+[![CI/CD](https://github.com/filipi86/drogonsec/actions/workflows/ci.yml/badge.svg)](https://github.com/filipi86/drogonsec/actions)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![OWASP Top 10:2025](https://img.shields.io/badge/OWASP-Top%2010%3A2025-orange.svg)](https://owasp.org/Top10/2025/)
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8.svg)](https://golang.org)
