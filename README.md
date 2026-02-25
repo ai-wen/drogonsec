@@ -5,11 +5,11 @@
 [![OWASP Top 10:2025](https://img.shields.io/badge/OWASP-Top%2010%3A2025-orange.svg)](https://owasp.org/Top10/2025/)
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8.svg)](https://golang.org)
 
-> An open-source, comprehensive security scanner combining SAST, SCA, and secret detection — aligned with OWASP Top 10:2025 — powered by Claude AI for intelligent remediation.
+> An open-source, comprehensive security scanner combining SAST, SCA, and secret detection aligned with OWASP Top 10:2025 — created by Filipi Pires for intelligent remediation.
 
 ---
 
-## 🚀 Features
+## Features
 
 | Engine | Description |
 |--------|-------------|
@@ -20,17 +20,17 @@
 | **AI**   | Claude AI-powered remediation suggestions |
 
 ### Security Frameworks
-- ✅ **OWASP Top 10:2025** — All 10 categories covered (including 2 new: Supply Chain & Mishandling Exceptions)
-- ✅ **CWE** — Common Weakness Enumeration mapping
-- ✅ **CVSS 3.1** — Severity scoring
-- ✅ **SARIF 2.1** — GitHub/Azure DevOps integration
+- **OWASP Top 10:2025** — All 10 categories covered (including 2 new: Supply Chain & Mishandling Exceptions)
+- **CWE** — Common Weakness Enumeration mapping
+- **CVSS 3.1** — Severity scoring
+- **SARIF 2.1** — GitHub/Azure DevOps integration
 
 ### Supported Languages
 `Python` `Java` `JavaScript` `TypeScript` `Go` `Kotlin` `C#` `PHP` `Ruby` `Swift` `Dart` `Elixir` `Erlang` `Shell` `C/C++` `HTML` `Terraform` `Kubernetes` `Nginx`
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Installation
 
@@ -76,7 +76,7 @@ drogonsec scan . --no-sast
 
 ---
 
-## 📊 Output Formats
+## Output Formats
 
 ### Text (default)
 ```
@@ -122,7 +122,7 @@ drogonsec scan . --no-sast
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Create `.drogonsec.yaml` in your project root:
 
@@ -156,7 +156,7 @@ fail_on:
 
 ---
 
-## 🤖 Claude AI Integration
+## Claude AI Integration
 
 DragonSec integrates with Claude AI (claude-sonnet-4) to provide intelligent, context-aware remediation suggestions:
 
@@ -176,7 +176,7 @@ drogonsec scan . --enable-ai
 
 ---
 
-## 🔍 OWASP Top 10:2025 Coverage
+## OWASP Top 10:2025 Coverage
 
 | # | Category | Status |
 |---|----------|--------|
@@ -193,7 +193,7 @@ drogonsec scan . --enable-ai
 
 ---
 
-## 🔐 Secret Detection Patterns
+## Secret Detection Patterns
 
 DragonSec detects 50+ secret patterns including:
 
@@ -208,7 +208,7 @@ DragonSec detects 50+ secret patterns including:
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 drogonsec/
@@ -226,7 +226,7 @@ drogonsec/
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Areas to contribute:
 - New security rules for any language
@@ -239,13 +239,13 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
-## 📄 License
+## License
 
 Apache License 2.0 — See [LICENSE](LICENSE)
 
 ---
 
-## 🙏 Credits
+## Credits
 
 Inspired by [Horusec](https://github.com/ZupIT/horusec) (ZupIT). DragonSec is its modern, actively maintained successor with enhanced capabilities.
 
