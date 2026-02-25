@@ -5,23 +5,8 @@
 [![OWASP Top 10:2025](https://img.shields.io/badge/OWASP-Top%2010%3A2025-orange.svg)](https://owasp.org/Top10/2025/)
 [![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8.svg)](https://golang.org)
 
-```text
-  ╔════════════════════════════════════════════════════════════════════════════════╗
-  ║ DRG-0x1 ▸▸ NEURAL THREAT SCANNER  │  SAST · SCA · LEAKS · GIT-HISTORY · IaC    ║
-  ╠════════════════════════════════════════════════════════════════════════════════╣
-  ║  ██████╗ ██████╗  ██████╗  ██████╗  ██████╗ ███╗  ██╗███████╗███████╗ ██████╗  ║
-  ║  ██╔══██╗██╔══██╗██╔═══██╗██╔════╝ ██╔═══██╗████╗ ██║██╔════╝██╔════╝██╔════╝  ║
-  ║  ██║  ██║██████╔╝██║   ██║██║  ███╗██║   ██║██╔██╗██║███████╗█████╗  ██║       ║
-  ║  ██║  ██║██╔══██╗██║   ██║██║   ██║██║   ██║██║██╗██║╚════██║██╔══╝  ██║       ║
-  ║  ██████╔╝██║  ██║╚██████╔╝╚██████╔╝╚██████╔╝██║╚████║███████║███████╗╚██████╗  ║
-  ║  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝ ╚═╝ ╚═══╝╚══════╝╚══════╝ ╚═════╝  ║
-  ╠════════════════════════════════════════════════════════════════════════════════╣
-  ║            ◆ HUNT VULNERABILITIES  ◆ BREAK WALLS  ◆ SECURE CODE  ◆             ║
-  ╠════════════════════════════════════════════════════════════════════════════════╣
-  ║ SAST │ SCA │ LEAKS │ GIT-HISTORY │ IaC │ Remediation AI [Enterprise]           ║
-  ║ ► Created by Filipi Pires │ v0.1.0 │ OWASP 2025 │ Maintained by: CROSS-INTEL ◄ ║
-  ╚════════════════════════════════════════════════════════════════════════════════╝
-```
+<img width="1110" height="517" alt="image" src="https://github.com/user-attachments/assets/cd2908f5-a0ea-433d-ba23-67b6ef1ed236" />
+
 
 > An open-source, comprehensive security scanner combining SAST, SCA, and secret detection aligned with OWASP Top 10:2025 — created by Filipi Pires for intelligent remediation.
 
