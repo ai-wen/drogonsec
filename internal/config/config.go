@@ -159,4 +159,9 @@ var DefaultIgnorePaths = []string{
 	".mypy_cache",
 	".gradle",
 	".m2",
+	// Test-data directories (Go convention) – contain intentionally
+	// vulnerable fixtures and should not be flagged as production issues.
+	"testdata",
+	"fixtures",
+	"test_fixtures",
 }

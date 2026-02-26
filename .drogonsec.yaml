@@ -25,6 +25,10 @@ scan:
     - ".m2"
     - "coverage"
     - "*.min.js"
+    # Test directories — contain intentionally vulnerable fixtures
+    - "testdata"
+    - "fixtures"
+    - "test_fixtures"
 
   # Specific languages to scan (empty = auto-detect all)
   languages: []
@@ -81,11 +85,31 @@ custom_rules:
   #   remediation: "Use safe_function() instead"
 
 # False positive suppression
+# These entries document known false positives in the project's own test suite.
+# The patterns below are deliberately placed in test files to verify the scanner
+# detects them — they are not real credentials or vulnerabilities.
 suppressions:
-  # Example:
-  # - rule_id: PY-003
-  #   file: "tests/fixtures/test_credentials.py"
-  #   reason: "Test fixture - not real credentials"
+  - rule_id: "LEAK-001"
+    file: "internal/leaks/detector_test.go"
+    reason: "Test fixture — official AWS documentation example key (AKIAIOSFODNN7EXAMPLE), not a real credential"
+  - rule_id: "LEAK-020"
+    file: "internal/leaks/detector_test.go"
+    reason: "Test fixture — synthetic GitHub token pattern, not a real token"
+  - rule_id: "LEAK-080"
+    file: "internal/leaks/detector_test.go"
+    reason: "Test fixture — RSA private key header only, no actual key material"
+  - rule_id: "LEAK-030"
+    file: "internal/leaks/detector_test.go"
+    reason: "Test fixture — synthetic Stripe key pattern, not a real key"
+  - rule_id: "LEAK-100"
+    file: "internal/leaks/detector_test.go"
+    reason: "Test fixture — JWT from jwt.io documentation, not a production token"
+  - rule_id: "JAVA-003"
+    file: "internal/engine/engine_test.go"
+    reason: "Test fixture — hardcoded credential embedded in a Java code string to verify JAVA-003 detection"
+  - rule_id: "GO-005"
+    file: "internal/engine/engine_test.go"
+    reason: "Test fixture — InsecureSkipVerify:true embedded in a Go code string to verify GO-005 detection"
 
 # Fail conditions (exit code 1 when true)
 fail_on:
