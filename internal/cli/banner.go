@@ -12,13 +12,10 @@ import (
 var ansiRE = regexp.MustCompile(`\x1b\[[0-9;]*m`)
 
 // runeWidth returns the terminal display column-width for a single rune.
-// Unicode Block Elements (U+2580–U+259F, e.g. █) are "Ambiguous" width and
-// most terminals render them as 2 display columns wide.
-// Box-drawing characters (╔ ═ ║ etc.) remain single-width.
+// Block elements (█ etc.) and box-drawing characters are single-width in
+// standard terminals. Only true East Asian wide characters are double-width,
+// but we don't use them in this banner.
 func runeWidth(r rune) int {
-	if r >= '\u2580' && r <= '\u259F' {
-		return 2
-	}
 	return 1
 }
 
@@ -52,12 +49,11 @@ func PrintDragonBanner() {
 	bold  := color.New(color.FgHiWhite, color.Bold).SprintFunc()
 	dim   := color.New(color.FgHiBlack).SprintFunc()
 	gn    := color.New(color.FgHiGreen, color.Bold).SprintFunc()
-	title := color.New(color.FgHiYellow, color.Bold).SprintFunc() // Gold Cyberpunk
+	title := color.New(color.FgYellow, color.Bold).SprintFunc() // Dark Gold Cyberpunk
 
 	// ── Frame helpers (W = inner width between ╔ and ╗) ──────────────────────
-	// The widest title line contains 54 × █ (each rendered as 2 cols) + 24
-	// single-width runes → 132 display cols. W=134 gives W-1=133 ≥ 132 ✓
-	const W = 134
+	// W=80 accommodates the DROGONSEC title lines (≤78 runes wide)
+	const W = 80
 
 	topBdr := nCyan("  ╔") + nCyan(strings.Repeat("═", W)) + nCyan("╗")
 	midBdr := nCyan("  ╠") + nCyan(strings.Repeat("═", W)) + nCyan("╣")
