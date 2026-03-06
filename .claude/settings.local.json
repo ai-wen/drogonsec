@@ -43,7 +43,15 @@
       "Bash(done)",
       "Bash(go install:*)",
       "Bash(drogonsec --version:*)",
-      "Bash(drogonsec:*)"
+      "Bash(drogonsec:*)",
+      "Bash(gofmt -d /Users/thor/Documents/THOR/DrogonSec/drogonsec/internal/sca/osv.go)",
+      "Bash(gofmt -d /Users/thor/Documents/THOR/DrogonSec/drogonsec/internal/sca/engine.go)",
+      "Bash(exit 0)",
+      "Bash(gofmt -d /Users/thor/Documents/THOR/DrogonSec/drogonsec/internal/engine/rules_python.go)",
+      "Bash(gofmt -d /Users/thor/Documents/THOR/DrogonSec/drogonsec/internal/engine/rules_javascript.go)",
+      "Bash(gofmt -d /Users/thor/Documents/THOR/DrogonSec/drogonsec/internal/engine/rules_java.go)",
+      "Bash(gofmt -w internal/sca/osv.go internal/sca/engine.go internal/engine/rules_python.go internal/engine/rules_javascript.go internal/engine/rules_java.go)",
+      "Bash(go vet ./...)"
     ]
   }
 }
