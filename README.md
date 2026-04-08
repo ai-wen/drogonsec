@@ -46,7 +46,12 @@
 
 ### Installation
 
-**From source (requires Go 1.22+):**
+**Go Install (requires Go 1.22+):**
+```bash
+go install github.com/filipi86/drogonsec/cmd/drogonsec@latest
+```
+
+**From source:**
 ```bash
 git clone https://github.com/filipi86/drogonsec
 cd drogonsec

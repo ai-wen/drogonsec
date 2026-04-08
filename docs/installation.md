@@ -45,7 +45,35 @@ After a successful build, verify the binary:
 
 ---
 
-## Method 2 — Docker
+## Method 2 — Go Install (Requires Go 1.22+)
+
+Install directly from the module without cloning the repository:
+
+```bash
+go install github.com/filipi86/drogonsec/cmd/drogonsec@latest
+```
+
+The binary will be placed in your `$GOPATH/bin` (usually `~/go/bin`). Make sure it is in your `$PATH`:
+
+```bash
+export PATH=$PATH:$(go env GOPATH)/bin
+```
+
+Verify the installation:
+
+```bash
+drogonsec --version
+```
+
+To run without installing permanently:
+
+```bash
+go run github.com/filipi86/drogonsec/cmd/drogonsec@latest scan .
+```
+
+---
+
+## Method 3 — Docker
 
 No local Go installation required. Mount your project directory and run:
 
@@ -61,7 +89,7 @@ docker run --rm -v $(pwd):/scan ghcr.io/filipi86/drogonsec scan /scan --format j
 
 ---
 
-## Method 3 — Manual Build
+## Method 4 — Manual Build
 
 If you prefer not to use `make`:
 
