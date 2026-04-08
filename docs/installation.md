@@ -50,13 +50,13 @@ After a successful build, verify the binary:
 No local Go installation required. Mount your project directory and run:
 
 ```bash
-docker run --rm -v $(pwd):/scan ghcr.io/drogonsec/drogonsec scan /scan
+docker run --rm -v $(pwd):/scan ghcr.io/filipi86/drogonsec scan /scan
 ```
 
 To scan with JSON output:
 
 ```bash
-docker run --rm -v $(pwd):/scan ghcr.io/drogonsec/drogonsec scan /scan --format json --output /scan/report.json
+docker run --rm -v $(pwd):/scan ghcr.io/filipi86/drogonsec scan /scan --format json --output /scan/report.json
 ```
 
 ---

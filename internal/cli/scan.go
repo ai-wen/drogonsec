@@ -6,11 +6,11 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/filipi86/drogonsec/internal/ai"
 	"github.com/filipi86/drogonsec/internal/analyzer"
 	"github.com/filipi86/drogonsec/internal/config"
 	"github.com/filipi86/drogonsec/internal/reporter"
-	"github.com/fatih/color"
 	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

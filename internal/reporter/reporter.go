@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/filipi86/drogonsec/internal/analyzer"
 	"github.com/filipi86/drogonsec/internal/config"
-	"github.com/fatih/color"
 )
 
 // Reporter defines the interface for report generation

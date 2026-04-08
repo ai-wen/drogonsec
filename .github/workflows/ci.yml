@@ -11,6 +11,7 @@ on:
 permissions:
   contents: read
   security-events: write  # Required for SARIF upload
+  packages: write          # Required for GHCR Docker push
 
 jobs:
   # ============ BUILD & TEST ============

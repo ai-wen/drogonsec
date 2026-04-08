@@ -55,7 +55,7 @@ make install
 
 **Docker:**
 ```bash
-docker run --rm -v $(pwd):/scan ghcr.io/drogonsec/drogonsec scan /scan
+docker run --rm -v $(pwd):/scan ghcr.io/filipi86/drogonsec scan /scan
 ```
 
 ### Basic Usage
