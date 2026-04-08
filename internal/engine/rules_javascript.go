@@ -1,6 +1,6 @@
 package engine
 
-import "github.com/drogonsec/drogonsec/internal/config"
+import "github.com/filipi86/drogonsec/internal/config"
 
 func javascriptRules() []Rule {
 	return []Rule{

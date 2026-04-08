@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/drogonsec/drogonsec/internal/config"
-	"github.com/drogonsec/drogonsec/internal/engine"
-	"github.com/drogonsec/drogonsec/internal/leaks"
-	"github.com/drogonsec/drogonsec/internal/sca"
+	"github.com/filipi86/drogonsec/internal/config"
+	"github.com/filipi86/drogonsec/internal/engine"
+	"github.com/filipi86/drogonsec/internal/leaks"
+	"github.com/filipi86/drogonsec/internal/sca"
 	"github.com/fatih/color"
 	"github.com/schollz/progressbar/v3"
 )

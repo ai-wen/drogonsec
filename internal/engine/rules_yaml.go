@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/drogonsec/drogonsec/internal/config"
+	"github.com/filipi86/drogonsec/internal/config"
 	"gopkg.in/yaml.v3"
 )
 

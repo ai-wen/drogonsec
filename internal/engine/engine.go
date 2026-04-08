@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/drogonsec/drogonsec/internal/config"
+	"github.com/filipi86/drogonsec/internal/config"
 )
 
 // Finding mirrors analyzer.Finding but kept local to avoid import cycle

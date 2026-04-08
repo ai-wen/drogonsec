@@ -37,7 +37,7 @@ jobs:
       - name: Build binary (staging branding)
         run: |
           go build \
-            -ldflags "-X github.com/drogonsec/drogonsec/internal/cli.Environment=staging" \
+            -ldflags "-X github.com/filipi86/drogonsec/internal/cli.Environment=staging" \
             -o bin/drogonsec-staging \
             ./cmd/drogonsec
 

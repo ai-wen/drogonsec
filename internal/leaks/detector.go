@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/drogonsec/drogonsec/internal/config"
+	"github.com/filipi86/drogonsec/internal/config"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
 )

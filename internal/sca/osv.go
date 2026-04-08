@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drogonsec/drogonsec/internal/config"
+	"github.com/filipi86/drogonsec/internal/config"
 )
 
 const (

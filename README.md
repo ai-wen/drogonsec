@@ -48,7 +48,7 @@
 
 **From source (requires Go 1.22+):**
 ```bash
-git clone https://github.com/drogonsec/drogonsec
+git clone https://github.com/filipi86/drogonsec
 cd drogonsec
 make install
 ```

@@ -10,8 +10,8 @@ import (
 
 // Environment is injected at build time via ldflags:
 //
-//	go build -ldflags "-X github.com/drogonsec/drogonsec/internal/cli.Environment=development"
-//	go build -ldflags "-X github.com/drogonsec/drogonsec/internal/cli.Environment=staging"
+//	go build -ldflags "-X github.com/filipi86/drogonsec/internal/cli.Environment=development"
+//	go build -ldflags "-X github.com/filipi86/drogonsec/internal/cli.Environment=staging"
 //
 // Empty string (default) = production.
 var Environment string

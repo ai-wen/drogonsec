@@ -3,7 +3,7 @@ package analyzer
 import (
 	"time"
 
-	"github.com/drogonsec/drogonsec/internal/config"
+	"github.com/filipi86/drogonsec/internal/config"
 )
 
 // Finding represents a single security vulnerability or issue found

@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/drogonsec/drogonsec/internal/engine"
+	"github.com/filipi86/drogonsec/internal/engine"
 )
 
 func TestEngine_PythonSQLInjection(t *testing.T) {

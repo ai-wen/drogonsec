@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/drogonsec/drogonsec/internal/cli"
+	"github.com/filipi86/drogonsec/internal/cli"
 )
 
 func main() {

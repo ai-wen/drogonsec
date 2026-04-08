@@ -3,8 +3,8 @@ package leaks_test
 import (
 	"testing"
 
-	"github.com/drogonsec/drogonsec/internal/config"
-	"github.com/drogonsec/drogonsec/internal/leaks"
+	"github.com/filipi86/drogonsec/internal/config"
+	"github.com/filipi86/drogonsec/internal/leaks"
 )
 
 func TestDetector_AWSSKey(t *testing.T) {

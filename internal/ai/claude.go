@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drogonsec/drogonsec/internal/analyzer"
-	"github.com/drogonsec/drogonsec/internal/config"
+	"github.com/filipi86/drogonsec/internal/analyzer"
+	"github.com/filipi86/drogonsec/internal/config"
 )
 
 const (

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/drogonsec/drogonsec/internal/analyzer"
-	"github.com/drogonsec/drogonsec/internal/config"
+	"github.com/filipi86/drogonsec/internal/analyzer"
+	"github.com/filipi86/drogonsec/internal/config"
 	"github.com/fatih/color"
 )
 
@@ -296,7 +296,7 @@ func (r *SARIFReporter) Write(result *analyzer.ScanResult, w io.Writer) error {
 			Tool: sarifTool{Driver: sarifDriver{
 				Name:           "DragonSec Security Scanner",
 				Version:        result.Version,
-				InformationURI: "https://github.com/drogonsec/drogonsec",
+				InformationURI: "https://github.com/filipi86/drogonsec",
 				Rules:          rules,
 			}},
 			Results: results,
