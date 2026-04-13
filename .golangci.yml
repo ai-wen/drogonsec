@@ -11,7 +11,6 @@ linters:
     - gosimple
     - ineffassign
     - misspell
-    - gofmt
   disable:
     - errcheck   # viper.BindPFlag / progress bar errors are non-critical
   settings:
@@ -19,6 +18,10 @@ linters:
       enable-all: false
     staticcheck:
       checks: ["all", "-SA1006", "-SA1019"]
+
+formatters:
+  enable:
+    - gofmt
 
 issues:
   max-issues-per-linter: 50
