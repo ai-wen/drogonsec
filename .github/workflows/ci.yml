@@ -48,7 +48,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v6
         with:
-          file: ./coverage.out
+          files: ./coverage.out
 
       - name: Build binary
         run: |
@@ -57,7 +57,7 @@ jobs:
             -ldflags "-X main.Version=$(git describe --tags --always 2>/dev/null || echo '0.1.0') \
                       -X github.com/filipi86/drogonsec/internal/cli.Environment=production" \
             -o bin/drogonsec \
-            ./cmd/drogonsec/main.go
+            ./cmd/drogonsec
 
   # ============ LINT ============
   lint:
@@ -70,7 +70,7 @@ jobs:
           go-version: '1.25.9'
           cache: true
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v7
         with:
           version: v2.0.0
 
@@ -99,6 +99,7 @@ jobs:
             --no-ai
 
       - name: Upload SARIF to GitHub Security
+        if: hashFiles('drogonsec.sarif') != ''
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: drogonsec.sarif
