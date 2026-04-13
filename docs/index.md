@@ -123,11 +123,4 @@ drogonsec/
 
 ## Links
 
-| | |
-|--|--|
-| 📦 Repository | [github.com/filipi86/drogonsec](https://github.com/filipi86/drogonsec) |
-| 🐛 Issues | [github.com/filipi86/drogonsec/issues](https://github.com/filipi86/drogonsec/issues) |
-| 💬 Discussions | [github.com/filipi86/drogonsec/discussions](https://github.com/filipi86/drogonsec/discussions) |
-| 🚀 Releases | [github.com/filipi86/drogonsec/releases](https://github.com/filipi86/drogonsec/releases) |
-| 🔒 Security | [github.com/filipi86/drogonsec/security](https://github.com/filipi86/drogonsec/security) |
-| 🐋 Docker Image | [ghcr.io/filipi86/drogonsec](https://github.com/filipi86/drogonsec/pkgs/container/drogonsec) |
+📖 **Documentation:** [cross-intel.com/opensource/drogonsec](https://cross-intel.com/opensource/drogonsec)
