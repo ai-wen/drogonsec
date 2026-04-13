@@ -95,8 +95,7 @@ jobs:
           ./bin/drogonsec scan . \
             --format sarif \
             --output drogonsec.sarif \
-            --severity MEDIUM \
-            --no-ai
+            --severity MEDIUM
 
       - name: Upload SARIF to GitHub Security
         if: hashFiles('drogonsec.sarif') != ''
