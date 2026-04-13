@@ -91,12 +91,24 @@ docker run --rm -v $(pwd):/scan ghcr.io/filipi86/drogonsec scan /scan --format j
 
 ## Method 4 — Manual Build
 
-If you prefer not to use `make`:
+If you prefer not to use `make`, build with full ldflags:
 
 ```bash
 git clone https://github.com/filipi86/drogonsec
 cd drogonsec
-go build -o ./bin/drogonsec ./cmd/drogonsec/main.go
+go build \
+  -ldflags "-X github.com/filipi86/drogonsec/internal/cli.Environment=production" \
+  -o ./bin/drogonsec \
+  ./cmd/drogonsec
+```
+
+For a development build with green branding and `[DEV]` label:
+
+```bash
+go build \
+  -ldflags "-X github.com/filipi86/drogonsec/internal/cli.Environment=development" \
+  -o ./bin/drogonsec \
+  ./cmd/drogonsec
 ```
 
 ---

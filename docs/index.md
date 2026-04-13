@@ -95,6 +95,19 @@ drogonsec/
 
 ---
 
+## Documentation
+
+| Page | Description |
+|------|-------------|
+| [Installation](installation.md) | All installation methods — source, go install, Docker, manual build |
+| [Usage](usage.md) | CLI commands, flags, output formats, CI/CD integration |
+| [Modules](modules.md) | Engines, rules, language support |
+| [CI/CD Pipelines](ci-cd.md) | Pipelines, security gates, Dependabot, multi-environment branding |
+| [Security](security.md) | XSS prevention, HTTPS enforcement, ReDoS protection, supply chain |
+| [FAQ](faq.md) | Troubleshooting and common questions |
+
+---
+
 ## Credits & Acknowledgements
 
 - **Created by:** [Filipi Pires](https://github.com/filipi86) — Head of Identity Threat Labs, Global Threat Researcher, Cybersecurity Advocate, Instructor, Speaker and Writer about Malware Hunting
