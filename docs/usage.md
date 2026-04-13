@@ -144,7 +144,7 @@ jobs:
         run: drogonsec scan . --format sarif --output results.sarif
 
       - name: Upload to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: results.sarif
 ```

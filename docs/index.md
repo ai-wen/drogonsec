@@ -4,6 +4,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![OWASP Top 10 2025](https://img.shields.io/badge/OWASP-Top%2010%3A2025-orange.svg)](https://owasp.org/Top10/2025/)
 [![Go 1.25+](https://img.shields.io/badge/Go-1.25+-00ADD8.svg)](https://golang.org)
+[![GitHub Release](https://img.shields.io/github/v/release/filipi86/drogonsec)](https://github.com/filipi86/drogonsec/releases)
+[![GitHub Issues](https://img.shields.io/github/issues/filipi86/drogonsec)](https://github.com/filipi86/drogonsec/issues)
 
 > An open-source, comprehensive security scanner combining **SAST**, **SCA**, and **secret detection** — aligned with OWASP Top 10:2025 and built for intelligent remediation.
 
@@ -116,3 +118,16 @@ drogonsec/
 
 - **Built with:** Go, Cobra, Viper, go-git
 - **License:** Apache License 2.0
+
+---
+
+## Links
+
+| | |
+|--|--|
+| 📦 Repository | [github.com/filipi86/drogonsec](https://github.com/filipi86/drogonsec) |
+| 🐛 Issues | [github.com/filipi86/drogonsec/issues](https://github.com/filipi86/drogonsec/issues) |
+| 💬 Discussions | [github.com/filipi86/drogonsec/discussions](https://github.com/filipi86/drogonsec/discussions) |
+| 🚀 Releases | [github.com/filipi86/drogonsec/releases](https://github.com/filipi86/drogonsec/releases) |
+| 🔒 Security | [github.com/filipi86/drogonsec/security](https://github.com/filipi86/drogonsec/security) |
+| 🐋 Docker Image | [ghcr.io/filipi86/drogonsec](https://github.com/filipi86/drogonsec/pkgs/container/drogonsec) |

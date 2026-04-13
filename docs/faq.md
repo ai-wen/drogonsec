@@ -184,7 +184,7 @@ Drogonsec will exit with a non-zero code when findings at or above the specified
   run: drogonsec scan . --format sarif --output results.sarif
 
 - name: Upload SARIF to GitHub Security
-  uses: github/codeql-action/upload-sarif@v3
+  uses: github/codeql-action/upload-sarif@v4
   with:
     sarif_file: results.sarif
 ```
