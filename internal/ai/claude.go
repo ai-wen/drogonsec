@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -52,11 +54,11 @@ func New(cfg ClientConfig) *Client {
 		cfg.Endpoint = defaultEndpoint
 	}
 	// Reject plaintext HTTP to prevent API key exposure in transit.
-	// Allow localhost HTTP for local development/testing only.
-	if !strings.HasPrefix(cfg.Endpoint, "https://") &&
-		!strings.HasPrefix(cfg.Endpoint, "http://localhost") &&
-		!strings.HasPrefix(cfg.Endpoint, "http://127.0.0.1") {
-		cfg.Endpoint = defaultEndpoint // silently fall back to safe default
+	// Allow http:// only for actual loopback IPs (127.x, ::1) to support
+	// local dev proxies. String prefix checks are insufficient because
+	// "http://localhost.attacker.com" passes HasPrefix("http://localhost").
+	if !isEndpointSafe(cfg.Endpoint) {
+		cfg.Endpoint = defaultEndpoint
 	}
 	return &Client{
 		cfg: cfg,
@@ -64,6 +66,28 @@ func New(cfg ClientConfig) *Client {
 			Timeout: 30 * time.Second,
 		},
 	}
+}
+
+// isEndpointSafe returns true if the endpoint is safe to use for AI calls.
+// HTTPS is always allowed. HTTP is allowed only for actual loopback addresses
+// (127.x.x.x, ::1) to support local dev proxies. String prefix matching is
+// intentionally avoided to prevent bypasses like "http://localhost.evil.com".
+func isEndpointSafe(endpoint string) bool {
+	u, err := url.Parse(endpoint)
+	if err != nil {
+		return false
+	}
+	if u.Scheme == "https" {
+		return true
+	}
+	if u.Scheme == "http" {
+		host := u.Hostname() // strips port
+		ip := net.ParseIP(host)
+		if ip != nil && ip.IsLoopback() {
+			return true
+		}
+	}
+	return false
 }
 
 // NewFromScanConfig is a convenience constructor that builds a Client

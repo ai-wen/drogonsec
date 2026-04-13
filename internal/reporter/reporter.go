@@ -5,6 +5,7 @@ import (
 	"fmt"
 	htmlpkg "html"
 	"io"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -223,6 +224,17 @@ type sarifRegion struct {
 	StartColumn int `json:"startColumn,omitempty"`
 }
 
+// sarifRelPath returns a path relative to targetPath for use in SARIF URIs.
+// Absolute paths in SARIF expose server-side filesystem layout; relative
+// paths are required by the SARIF 2.1 spec when originalUriBaseIds is set.
+func sarifRelPath(targetPath, filePath string) string {
+	rel, err := filepath.Rel(targetPath, filePath)
+	if err != nil {
+		return filePath
+	}
+	return filepath.ToSlash(rel)
+}
+
 func (r *SARIFReporter) Write(result *analyzer.ScanResult, w io.Writer) error {
 	var rules []sarifRule
 	var results []sarifResult
@@ -253,7 +265,7 @@ func (r *SARIFReporter) Write(result *analyzer.ScanResult, w io.Writer) error {
 			Message: sarifMessage{Text: fmt.Sprintf("%s - %s", f.Title, f.Remediation)},
 			Locations: []sarifLocation{{
 				PhysicalLocation: sarifPhysicalLocation{
-					ArtifactLocation: sarifArtifactLocation{URI: f.File},
+					ArtifactLocation: sarifArtifactLocation{URI: sarifRelPath(result.TargetPath, f.File)},
 					Region:           sarifRegion{StartLine: f.Line, StartColumn: f.Column},
 				},
 			}},
@@ -282,7 +294,7 @@ func (r *SARIFReporter) Write(result *analyzer.ScanResult, w io.Writer) error {
 			Message: sarifMessage{Text: fmt.Sprintf("Secret detected: %s", f.Type)},
 			Locations: []sarifLocation{{
 				PhysicalLocation: sarifPhysicalLocation{
-					ArtifactLocation: sarifArtifactLocation{URI: f.File},
+					ArtifactLocation: sarifArtifactLocation{URI: sarifRelPath(result.TargetPath, f.File)},
 					Region:           sarifRegion{StartLine: f.Line},
 				},
 			}},
@@ -391,7 +403,7 @@ func (r *HTMLReporter) Write(result *analyzer.ScanResult, w io.Writer) error {
     <div class="stat-card"><div class="number low">%d</div><div class="label">Low</div></div>
     <div class="stat-card"><div class="number">%d</div><div class="label">Files Scanned</div></div>
   </div>`,
-		result.TargetPath,
+		htmlpkg.EscapeString(result.TargetPath),
 		result.ScanTime.Format("2006-01-02 15:04:05"),
 		result.Duration.Round(time.Millisecond),
 		result.Stats.TotalFindings,

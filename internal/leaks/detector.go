@@ -574,14 +574,15 @@ func shannonEntropy(s string) float64 {
 	return entropy
 }
 
-// redactSecret redacts the middle portion of a secret for safe display
+// redactSecret redacts a secret for safe display.
+// Secrets shorter than 20 chars are fully masked — exposing 8 of 9 chars
+// would still reveal enough to narrow offline attacks. Longer secrets show
+// only the first 3 chars to aid identification without leaking entropy.
 func redactSecret(s string) string {
-	if len(s) <= 8 {
+	if len(s) < 20 {
 		return "***REDACTED***"
 	}
-	prefix := s[:4]
-	suffix := s[len(s)-4:]
-	return fmt.Sprintf("%s...%s [REDACTED]", prefix, suffix)
+	return s[:3] + strings.Repeat("*", len(s)-3)
 }
 
 // isBinary checks if content appears to be a binary file

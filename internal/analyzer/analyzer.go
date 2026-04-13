@@ -158,9 +158,17 @@ func (a *Analyzer) runSAST(files []string, result *ScanResult) error {
 		}),
 	)
 
-	// Worker pool
+	// Clamp workers to at least 1 — zero/negative value would start no
+	// goroutines, close findingCh immediately and silently return 0 findings.
+	workers := a.cfg.MaxWorkers
+	if workers <= 0 {
+		workers = 1
+	}
+
+	// Worker pool — buffer sized generously to avoid goroutines blocking on
+	// send when many findings are produced before the collector drains.
 	fileCh := make(chan string, len(files))
-	findingCh := make(chan Finding, 100)
+	findingCh := make(chan Finding, len(files)*10+100)
 	var wg sync.WaitGroup
 
 	// Send files to channel
@@ -170,7 +178,7 @@ func (a *Analyzer) runSAST(files []string, result *ScanResult) error {
 	close(fileCh)
 
 	// Start workers
-	for i := 0; i < a.cfg.MaxWorkers; i++ {
+	for i := 0; i < workers; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
