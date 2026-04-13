@@ -35,7 +35,7 @@ This project follows a **Contributor Covenant** approach. Be respectful, inclusi
 
 | Tool | Version |
 |------|---------|
-| Go | 1.22+ |
+| Go | 1.25+ |
 | Git | any recent |
 | golangci-lint | latest (optional, for linting) |
 | Docker | optional |
@@ -278,6 +278,35 @@ docs(readme): update installation instructions
    - Related issues (`Closes #123`)
 
 6. A maintainer will review and may request changes. Once approved, your PR will be merged.
+
+---
+
+## CI/CD Pipeline & Security Gates
+
+Every PR against `main`, `staging`, or `development` runs the full pipeline automatically:
+
+| Step | Tool | Blocks merge? |
+|------|------|---------------|
+| Module checksum validation | `go mod verify` | Yes |
+| Known CVE scan | `govulncheck` | Yes |
+| Build | `go build` | Yes |
+| Tests with race detector | `go test -race` | Yes |
+| Lint + gofmt | `golangci-lint` | Yes |
+| Self-scan (SAST + SCA) | `drogonsec scan` | No (report only) |
+
+> **govulncheck** checks all direct and transitive dependencies against the
+> [Go Vulnerability Database](https://vuln.go.dev). If a CVE is confirmed
+> reachable in your code path, the build fails and the PR cannot be merged.
+
+### Dependency Updates (Dependabot)
+
+Dependency updates are handled automatically via **Dependabot** (every Monday):
+
+- **Patch updates** — CI runs, auto-merges if all gates pass
+- **Minor / Major updates** — CI runs, requires manual review before merge
+- **GitHub Actions updates** — always require manual review
+
+You do not need to update dependencies manually in your PRs.
 
 ---
 

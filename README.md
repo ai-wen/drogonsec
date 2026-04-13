@@ -5,7 +5,7 @@
 [![CI/CD](https://github.com/filipi86/drogonsec/actions/workflows/ci.yml/badge.svg)](https://github.com/filipi86/drogonsec/actions)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![OWASP Top 10 2025](https://img.shields.io/badge/OWASP-Top%2010%3A2025-orange.svg)](https://owasp.org/Top10/2025/)
-[![Go 1.22+](https://img.shields.io/badge/Go-1.22+-00ADD8.svg)](https://golang.org)
+[![Go 1.25+](https://img.shields.io/badge/Go-1.25+-00ADD8.svg)](https://golang.org)
 
 </div>
 
@@ -46,7 +46,7 @@
 
 ### Installation
 
-**Go Install (requires Go 1.22+):**
+**Go Install (requires Go 1.25+):**
 ```bash
 go install github.com/filipi86/drogonsec/cmd/drogonsec@latest
 ```

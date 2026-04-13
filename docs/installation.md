@@ -8,7 +8,7 @@ Before installing Drogonsec, make sure you have the following on your system:
 
 | Requirement | Minimum Version | Notes |
 |---|---|---|
-| **Go** | 1.22+ | [Download Go](https://golang.org/dl/) |
+| **Go** | 1.25+ | [Download Go](https://golang.org/dl/) |
 | **Git** | any | For cloning the repository |
 | **Make** | any | For using the build system |
 | **Docker** | any | Optional — for container-based usage |
@@ -22,7 +22,7 @@ go version
 Expected output:
 
 ```
-go version go1.22.x linux/amd64
+go version go1.25.x linux/amd64
 ```
 
 ---
@@ -45,7 +45,7 @@ After a successful build, verify the binary:
 
 ---
 
-## Method 2 — Go Install (Requires Go 1.22+)
+## Method 2 — Go Install (Requires Go 1.25+)
 
 Install directly from the module without cloning the repository:
 
