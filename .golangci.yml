@@ -16,7 +16,13 @@ linters:
     govet:
       enable-all: false
     staticcheck:
-      checks: ["all", "-SA1006", "-SA1019"]
+      checks:
+        - "all"
+        - "-SA1006"   # fmt.Sprintf with no format directives
+        - "-SA1019"   # deprecated API usage
+        - "-ST1000"   # package comments — not enforced in this project
+        - "-ST1003"   # OWASP_A01_* naming is intentional (mirrors OWASP standard)
+        - "-ST1020"   # exported comment format — cosmetic
 
 formatters:
   enable:

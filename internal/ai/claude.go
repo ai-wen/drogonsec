@@ -245,12 +245,12 @@ func buildPrompt(f analyzer.Finding) string {
 	var sb strings.Builder
 
 	sb.WriteString("## Security Vulnerability Found\n\n")
-	sb.WriteString(fmt.Sprintf("**Vulnerability:** %s\n", f.Title))
-	sb.WriteString(fmt.Sprintf("**Severity:** %s\n", f.Severity))
-	sb.WriteString(fmt.Sprintf("**Language:** %s\n", f.Language))
-	sb.WriteString(fmt.Sprintf("**OWASP Category:** %s\n", f.OWASP))
-	sb.WriteString(fmt.Sprintf("**CWE:** %s\n", f.CWE))
-	sb.WriteString(fmt.Sprintf("**CVSS Score:** %.1f\n\n", f.CVSS))
+	fmt.Fprintf(&sb, "**Vulnerability:** %s\n", f.Title)
+	fmt.Fprintf(&sb, "**Severity:** %s\n", f.Severity)
+	fmt.Fprintf(&sb, "**Language:** %s\n", f.Language)
+	fmt.Fprintf(&sb, "**OWASP Category:** %s\n", f.OWASP)
+	fmt.Fprintf(&sb, "**CWE:** %s\n", f.CWE)
+	fmt.Fprintf(&sb, "**CVSS Score:** %.1f\n\n", f.CVSS)
 
 	if f.Code != "" {
 		sb.WriteString("**Vulnerable Code:**\n```\n")
