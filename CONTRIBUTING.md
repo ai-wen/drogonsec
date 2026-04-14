@@ -6,6 +6,7 @@ Thank you for your interest in contributing to **DrogonSec**! This project is a 
 
 ## Table of Contents
 
+- [Contributor License Agreement (CLA)](#contributor-license-agreement-cla)
 - [Code of Conduct](#code-of-conduct)
 - [Getting Started](#getting-started)
 - [Project Structure](#project-structure)
@@ -20,6 +21,22 @@ Thank you for your interest in contributing to **DrogonSec**! This project is a 
 - [Testing](#testing)
 - [Code Style](#code-style)
 - [Pull Request Process](#pull-request-process)
+
+---
+
+## Contributor License Agreement (CLA)
+
+**All contributors must sign the CLA before their pull request can be merged.**
+
+When you open a PR, the CLA Assistant bot will automatically post a comment asking you to sign. Simply reply with:
+
+```
+I have read the CLA Document and I hereby sign the CLA
+```
+
+This is a **one-time action** — once signed, all future PRs from your account are automatically approved. The CLA ensures you retain full ownership of your contribution while granting DrogonSec the rights needed to maintain the project and build enterprise products on top of the open-source core.
+
+Read the full [CLA document](./CLA.md) before signing.
 
 ---
 
@@ -277,7 +294,9 @@ docs(readme): update installation instructions
    - How it was tested
    - Related issues (`Closes #123`)
 
-6. A maintainer will review and may request changes. Once approved, your PR will be merged.
+6. **Sign the CLA** when the bot posts the request — one-time action.
+
+7. A maintainer will review and may request changes. Once approved, your PR will be merged.
 
 ---
 
