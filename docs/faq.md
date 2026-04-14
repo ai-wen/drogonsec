@@ -204,6 +204,13 @@ The repository must be **public** for raw GitHub URLs to be accessible without a
 3. Make your changes
 4. Commit: `git commit -m "Add: description"`
 5. Push and open a Pull Request
+6. **Sign the CLA** — the bot will automatically post a comment on your PR. Reply with:
+   ```
+   I have read the CLA Document and I hereby sign the CLA
+   ```
+   This is a one-time action. All future PRs from your account are approved automatically.
+
+See the full [CONTRIBUTING.md](https://github.com/filipi86/drogonsec/blob/main/CONTRIBUTING.md) and [CLA](https://github.com/filipi86/drogonsec/blob/main/CLA.md) for details.
 
 ### What can I contribute?
 

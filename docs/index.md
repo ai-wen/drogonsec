@@ -117,7 +117,7 @@ drogonsec/
 - **Maintained by:** [CROSS-INTEL](https://cross-intel.com)
 
 - **Built with:** Go, Cobra, Viper, go-git
-- **License:** Apache License 2.0
+- **License:** [Apache License 2.0](https://github.com/filipi86/drogonsec/blob/main/LICENSE) — contributions require signing the [CLA](https://github.com/filipi86/drogonsec/blob/main/CLA.md)
 
 ---
 
