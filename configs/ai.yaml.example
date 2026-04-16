@@ -1,0 +1,38 @@
+# DrogonSec AI Remediation Configuration
+# Documentation: https://cross-intel.com/opensource/drogonsec
+#
+# Copy this file to configs/ai.yaml and customize.
+# NEVER commit real API keys - use environment variables instead.
+
+# ── Ollama (local, free, private) ── Recommended for OSS ─────────────────────
+# Install: https://ollama.com  |  macOS: brew install ollama
+# Pull model: ollama pull deepseek-coder
+#
+# provider: ollama
+# model: deepseek-coder        # recommended for security analysis
+# endpoint: http://127.0.0.1:11434/api/generate
+# timeout: 120                  # seconds (local inference is slower)
+#
+# Alternative models:
+#   codellama    — Meta's code-specialized model
+#   mistral      — General-purpose, lightweight
+#   qwen2.5-coder — Alibaba's code model
+
+# ── Anthropic (cloud) ────────────────────────────────────────────────────────
+# Set API key via environment: AI_API_KEY=sk-ant-...
+#
+# provider: anthropic
+# model: claude-sonnet-4-20250514
+# timeout: 30
+
+# ── OpenAI-compatible (cloud) ────────────────────────────────────────────────
+# Set API key via environment: AI_API_KEY=sk-...
+#
+# provider: openai
+# model: gpt-4o
+# endpoint: https://api.openai.com/v1/chat/completions
+# timeout: 30
+#
+# For Azure OpenAI:
+#   provider: azure
+#   endpoint: https://your-resource.openai.azure.com/...

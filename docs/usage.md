@@ -20,6 +20,28 @@ drogonsec --version
 
 ---
 
+## Shell Completion
+
+Drogonsec supports tab-completion for bash, zsh, fish, and PowerShell:
+
+```bash
+# Bash (add to ~/.bashrc)
+source <(drogonsec completion bash)
+
+# Zsh (add to ~/.zshrc)
+source <(drogonsec completion zsh)
+
+# Fish
+drogonsec completion fish | source
+
+# PowerShell
+drogonsec completion powershell | Out-String | Invoke-Expression
+```
+
+After enabling, press Tab to auto-complete commands, flags, and values.
+
+---
+
 ## Output Formats
 
 Drogonsec supports four output formats, suited for different workflows:
@@ -91,21 +113,64 @@ This is essential when onboarding a new repository or auditing code that may hav
 
 ---
 
-## AI-Powered Remediation *(Coming soon)*
+## AI-Powered Remediation
+
+DrogonSec provides AI-powered remediation for security findings. **Ollama + DeepSeek Coder** is the recommended open-source option — free, local, and private.
+
+### Local AI (Ollama) — Recommended
 
 ```bash
-# Set your AI provider API key
-export AI_API_KEY="your-api-key-here"
+# 1. Install Ollama (https://ollama.com)
+# macOS: brew install ollama
 
-# Enable AI remediation suggestions
+# 2. Pull the recommended model
+ollama pull deepseek-coder
+
+# 3. Scan with AI (auto-detects local Ollama)
 drogonsec scan . --enable-ai
 
-# Use a custom AI provider and model
-drogonsec scan . --enable-ai \
+# Use a different local model
+drogonsec scan . --enable-ai --ai-provider ollama --ai-model codellama
+
+# Custom timeout for large codebases
+drogonsec scan . --enable-ai --ai-timeout 180
+```
+
+### Cloud AI (API Key Required)
+
+```bash
+# Anthropic
+AI_API_KEY="sk-ant-..." drogonsec scan . --enable-ai --ai-provider anthropic
+
+# OpenAI-compatible
+AI_API_KEY="sk-..." drogonsec scan . --enable-ai \
   --ai-provider openai \
-  --ai-model gpt-4o \
+  --ai-model gpt-4o
+
+# Custom endpoint
+AI_API_KEY="..." drogonsec scan . --enable-ai \
+  --ai-provider custom \
   --ai-endpoint https://your-endpoint/v1/messages
 ```
+
+### Progress Counter
+
+When AI remediation is active, Drogonsec displays a per-finding progress counter (e.g., `[3/12] Analyzing finding...`) so you can track the analysis status in real time.
+
+### Response Cache
+
+AI responses are cached in `~/.drogonsec/ai-cache/` with a 7-day TTL. The first scan queries the AI provider for each finding, but subsequent scans with the same findings return cached results instantly, making repeated scans significantly faster.
+
+### AI Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--enable-ai` | `false` | Enable AI-powered remediation |
+| `--ai-provider` | `anthropic` | Provider: `ollama`, `anthropic`, `openai`, `azure`, `custom` |
+| `--ai-model` | *(auto)* | Model override (default: `deepseek-coder` for ollama) |
+| `--ai-endpoint` | *(auto)* | Custom API endpoint URL |
+| `--ai-key` | *(none)* | API key (or use `AI_API_KEY` env var; not needed for ollama) |
+| `--ai-timeout` | `0` | Timeout in seconds (0 = auto: 30s cloud, 120s ollama) |
 
 ---
 

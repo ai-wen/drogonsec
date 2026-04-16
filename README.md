@@ -31,7 +31,7 @@
 | **SCA**  | Software Composition Analysis — scan dependencies for CVEs |
 | **Leaks** | Secret detection — 50+ patterns (AWS, GCP, GitHub, JWT, SSH keys...) |
 | **IaC**  | Infrastructure as Code misconfigurations (Terraform, Kubernetes) |
-| **AI**   | AI-powered remediation suggestions (Coming soon) |
+| **AI**   | AI-powered remediation — Ollama (local/free) or cloud providers |
 
 ### Security Frameworks
 - **OWASP Top 10:2025** — All 10 categories covered (including 2 new: Supply Chain & Mishandling Exceptions)
@@ -77,9 +77,11 @@ drogonsec scan ./myproject --format json --output report.json
 # Scan with HTML report
 drogonsec scan . --format html --output report.html
 
-# Scan with AI remediation (Coming soon) (requires AI_API_KEY)
-export AI_API_KEY="..."
+# Scan with AI remediation (local Ollama — free, no API key needed)
 drogonsec scan . --enable-ai
+
+# Scan with AI remediation (cloud provider — requires API key)
+AI_API_KEY="..." drogonsec scan . --enable-ai --ai-provider anthropic
 
 # Scan git history for secrets
 drogonsec scan . --git-history
@@ -99,7 +101,7 @@ drogonsec scan . --no-sast
 
 ### Text (default)
 ```
-🛡 DragonSec Security Scanner
+Drogonsec Security Scanner
 ═══════════════════════════════════════════
   Target : /path/to/project
   SAST   : enabled
@@ -175,21 +177,40 @@ fail_on:
 
 ---
 
-## AI Integration (Coming soon)
+## AI-Powered Remediation
 
-DrogonSec includes AI-powered remediation (Coming soon), providing intelligent, context-aware fixes for detected vulnerabilities:
+DrogonSec includes AI-powered remediation, providing intelligent, context-aware fixes for detected vulnerabilities. **Ollama + DeepSeek Coder** is the recommended open-source option — **Ollama is open-source (MIT license)** and runs 100% locally with no data leaving your machine.
+
+### Local AI (Ollama) — Recommended for OSS
 
 ```bash
-# Set your AI provider API key
-export AI_API_KEY="..."
+# 1. Install Ollama (https://ollama.com)
+# macOS: brew install ollama
 
-# Enable AI remediation
+# 2. Pull the recommended model
+ollama pull deepseek-coder
+
+# 3. Scan with AI (auto-detects local Ollama)
 drogonsec scan . --enable-ai
 
-# Coming soon: use your own AI provider
-drogonsec scan . --enable-ai \
+# Use a different model
+drogonsec scan . --enable-ai --ai-provider ollama --ai-model codellama
+```
+
+### Cloud AI (API Key Required)
+
+```bash
+# Anthropic
+AI_API_KEY="sk-ant-..." drogonsec scan . --enable-ai --ai-provider anthropic
+
+# OpenAI-compatible
+AI_API_KEY="sk-..." drogonsec scan . --enable-ai \
   --ai-provider openai \
-  --ai-model gpt-4o \
+  --ai-model gpt-4o
+
+# Custom endpoint
+AI_API_KEY="..." drogonsec scan . --enable-ai \
+  --ai-provider custom \
   --ai-endpoint https://your-endpoint/v1/messages
 
 # Example output:
@@ -197,6 +218,30 @@ drogonsec scan . --enable-ai \
 # The SQL injection in line 42 allows attackers to manipulate your query...
 # Corrected code:
 #   cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+```
+
+### Bring Your Own AI
+
+Any OpenAI-compatible endpoint works as a custom provider:
+
+```bash
+AI_API_KEY="your-key" drogonsec scan . --enable-ai \
+  --ai-provider custom \
+  --ai-endpoint https://your-api/v1/messages
+```
+
+---
+
+## Shell Completion
+
+Drogonsec supports tab-completion for bash, zsh, fish, and PowerShell. See the [Usage docs](https://cross-intel.com/opensource/drogonsec/usage) for details.
+
+```bash
+# Bash
+source <(drogonsec completion bash)
+
+# Zsh
+source <(drogonsec completion zsh)
 ```
 
 ---
@@ -220,7 +265,7 @@ drogonsec scan . --enable-ai \
 
 ## Secret Detection Patterns
 
-DragonSec detects 50+ secret patterns including:
+Drogonsec detects 50+ secret patterns including:
 
 - **Cloud:** AWS Access Keys, GCP API Keys, Azure Storage Keys
 - **SCM:** GitHub tokens (classic, fine-grained, OAuth, App)
@@ -244,7 +289,7 @@ drogonsec/
 │   ├── leaks/          # Secret detection engine
 │   ├── sca/            # Dependency analysis engine
 │   ├── reporter/       # Text/JSON/SARIF/HTML reporters
-│   ├── ai/             # AI remediation engine (Coming soon)
+│   ├── ai/             # AI remediation engine (Ollama + Cloud)
 │   └── config/         # Types and configuration
 └── rules/              # YAML rule definitions (community-extensible)
 ```

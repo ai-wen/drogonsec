@@ -58,18 +58,20 @@ output:
   # Show code snippets in text output
   show_code: true
 
-# AI Integration (Coming soon)
+# AI Integration
 ai:
   # Enable AI-powered remediation suggestions
   enabled: false
-  # API key - prefer AI_API_KEY environment variable
+  # API key - prefer AI_API_KEY environment variable (not needed for ollama)
   api_key: ""
-  # AI provider: anthropic (default) | openai | azure | custom
+  # AI provider: ollama (local, free) | anthropic | openai | azure | custom
   provider: "anthropic"
-  # Model name override (leave empty to use provider default)
+  # Model name override (leave empty for provider default: deepseek-coder for ollama)
   model: ""
-  # Custom AI endpoint URL (for self-hosted or Coming soon AI)
+  # Custom AI endpoint URL (leave empty for provider default)
   endpoint: ""
+  # Timeout in seconds (0 = auto: 30s cloud, 120s ollama)
+  timeout: 0
   # Only enrich HIGH and CRITICAL findings (reduces API calls)
   high_severity_only: true
 

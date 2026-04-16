@@ -29,7 +29,7 @@ Inspired by Horusec, Drogonsec is its modern, actively maintained successor with
 |---|---|
 | Multiple tools for different scan types | Single binary — SAST + SCA + Leaks + IaC |
 | OWASP Top 10:2021 is outdated | Full alignment with OWASP Top 10:2025 |
-| No context-aware fix suggestions | AI remediation engine *(coming soon)* |
+| No context-aware fix suggestions | AI remediation — Ollama (free/local) + Cloud providers |
 | Complex CI/CD integration | Native SARIF output for GitHub/Azure DevOps |
 | Hard to extend with custom rules | Community YAML rules in `rules/` directory |
 
@@ -43,7 +43,7 @@ Inspired by Horusec, Drogonsec is its modern, actively maintained successor with
 | **SCA** | Software Composition Analysis — scan dependencies for CVEs | ✅ Stable |
 | **Leaks** | Secret detection — 50+ patterns (AWS, GCP, GitHub, JWT, SSH...) | ✅ Stable |
 | **IaC** | Infrastructure as Code misconfigurations (Terraform, Kubernetes) | ✅ Stable |
-| **AI** | AI-powered remediation suggestions | 🔜 Coming soon |
+| **AI** | AI-powered remediation — Ollama (local/free) or cloud providers | ✅ Available |
 
 ---
 
@@ -90,7 +90,7 @@ drogonsec/
 │   ├── leaks/              # Secret detection engine
 │   ├── sca/                # Dependency analysis engine
 │   ├── reporter/           # Text / JSON / SARIF / HTML reporters
-│   ├── ai/                 # AI remediation engine (coming soon)
+│   ├── ai/                 # AI remediation (Ollama OSS + Cloud)
 │   └── config/             # Types and configuration
 └── rules/                  # YAML rule definitions (community-extensible)
 ```

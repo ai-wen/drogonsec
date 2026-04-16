@@ -32,7 +32,7 @@ Drogonsec is inspired by Horusec but is its modern, actively maintained successo
 |---|---|---|
 | OWASP alignment | Top 10:2025 | Top 10:2021 |
 | Active development | ✅ Yes | ❌ Inactive |
-| AI remediation | 🔜 Coming soon | ❌ No |
+| AI remediation | ✅ Ollama + Cloud | ❌ No |
 | New OWASP A03 (Supply Chain) | ✅ Full SCA engine | ❌ No |
 | New OWASP A10 (Exceptions) | ✅ Yes | ❌ No |
 | Community YAML rules | ✅ Yes | Limited |
@@ -50,6 +50,40 @@ Drogonsec is written in Go and compiles to a single native binary. Supported pla
 ### What does `DRG-0x` mean?
 
 `DRG-0x` is Drogonsec's internal module naming convention, using hexadecimal identifiers (DRG-0x1, DRG-0x2, etc.) to reference specific components. For example, DRG-0x1 is the Core Engine and DRG-0x2 is the Neural Threat Scanner.
+
+### Is Ollama required?
+
+No. Ollama is optional but recommended for free, local AI remediation. Without Ollama, you can use any cloud provider (Anthropic, OpenAI, Azure) by setting `AI_API_KEY` and `--ai-provider`. If no AI provider is configured, Drogonsec runs normally without AI remediation.
+
+### Can I use my own AI provider?
+
+Yes. Use the `custom` provider with any OpenAI-compatible endpoint:
+
+```bash
+AI_API_KEY="your-key" drogonsec scan . --enable-ai \
+  --ai-provider custom \
+  --ai-endpoint https://your-api/v1/messages
+```
+
+### Where are AI responses cached?
+
+AI responses are cached in `~/.drogonsec/ai-cache/` with a 7-day TTL. This makes subsequent scans with the same findings much faster. To clear the cache, delete the directory:
+
+```bash
+rm -rf ~/.drogonsec/ai-cache/
+```
+
+### How do I enable tab completion?
+
+Drogonsec supports bash, zsh, fish, and PowerShell. Add the appropriate line to your shell config:
+
+```bash
+# Bash (add to ~/.bashrc)
+source <(drogonsec completion bash)
+
+# Zsh (add to ~/.zshrc)
+source <(drogonsec completion zsh)
+```
 
 ---
 

@@ -1,5 +1,7 @@
 package config
 
+import "time"
+
 // ScanConfig holds all configuration for a scan session
 type ScanConfig struct {
 	TargetPath   string
@@ -7,10 +9,11 @@ type ScanConfig struct {
 	OutputFile   string
 	IgnorePaths  []string
 	EnableAI     bool
-	AIAPIKey     string // generic AI provider key
-	AIProvider   string // "anthropic" (default) | "openai" | "azure" | "custom"
-	AIModel      string // model override (e.g. "gpt-4o", "claude-sonnet-4")
-	AIEndpoint   string // custom API endpoint for self-hosted / (Coming soon) AI
+	AIAPIKey     string        // generic AI provider key
+	AIProvider   string        // "anthropic" (default) | "openai" | "azure" | "custom"
+	AIModel      string        // model override (e.g. "gpt-4o", "claude-sonnet-4")
+	AIEndpoint   string        // custom API endpoint for self-hosted AI
+	AITimeout    time.Duration // per-request timeout for AI calls (0 = auto)
 	GitHistory   bool
 	EnableSAST   bool
 	EnableSCA    bool

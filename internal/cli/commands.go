@@ -12,15 +12,15 @@ var versionCmd = &cobra.Command{
 	Short: "Print DragonSec version information",
 	Run: func(cmd *cobra.Command, args []string) {
 		cyan := color.New(color.FgCyan, color.Bold).SprintFunc()
-		fmt.Printf("%s v%s\n", cyan("DragonSec Security Scanner"), "0.1.0")
-		fmt.Printf("  Build:    %s\n", "2026-02-25")
-		fmt.Printf("  Go:       %s\n", "1.22")
+		fmt.Printf("%s v%s\n", cyan("Drogonsec Security Scanner"), "0.1.0")
+		fmt.Printf("  Build:    %s\n", "2026-04-16")
+		fmt.Printf("  Go:       %s\n", "1.25")
 		fmt.Printf("  License:  Apache 2.0\n")
 		fmt.Printf("  GitHub:   https://github.com/filipi86/drogonsec\n")
 		fmt.Printf("\n  OWASP Top 10:2025 aligned\n")
 		fmt.Printf("  CWE / CVSS 3.1 / SARIF 2.1 support\n")
 		fmt.Printf("\n  %s  SAST · SCA · Leaks · IaC   (open-source)\n", color.GreenString("✓"))
-		fmt.Printf("  %s  AI remediation               (Coming soon)\n", color.New(color.FgMagenta, color.Bold).Sprint("✦"))
+		fmt.Printf("  %s  AI remediation               (Ollama + Cloud)\n", color.New(color.FgMagenta, color.Bold).Sprint("✦"))
 	},
 }
 

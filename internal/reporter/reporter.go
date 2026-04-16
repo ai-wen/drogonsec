@@ -39,6 +39,254 @@ func New(format string) (Reporter, error) {
 
 type TextReporter struct{}
 
+// sanitizeAIResponse cleans raw AI output before formatting, removing
+// garbage tokens from local models, filler preamble, and excessive whitespace.
+func sanitizeAIResponse(text string) string {
+	// 1. Remove known garbage tokens from local models
+	garbage := []string{
+		"｜begin▁of▁sentence｜",
+		"｜end▁of▁sentence｜",
+		"<|begin_of_sentence|>",
+		"<|end_of_sentence|>",
+		"<|im_start|>",
+		"<|im_end|>",
+		"<s>", "</s>",
+	}
+	for _, g := range garbage {
+		text = strings.ReplaceAll(text, g, "")
+	}
+
+	// 2. Remove filler preamble lines (common AI patterns)
+	fillerPrefixes := []string{
+		"Sure,", "Sure!", "Of course,", "Of course!",
+		"Certainly,", "Certainly!", "Here are", "Here is",
+		"I'd be happy to", "I'll provide", "Let me",
+		"Below are", "The following",
+	}
+	lines := strings.Split(text, "\n")
+	if len(lines) > 0 {
+		firstTrimmed := strings.TrimSpace(lines[0])
+		for _, prefix := range fillerPrefixes {
+			if strings.HasPrefix(firstTrimmed, prefix) {
+				lines = lines[1:] // remove first line
+				break
+			}
+		}
+	}
+	text = strings.Join(lines, "\n")
+
+	// 3. Normalize excessive blank lines (3+ -> 2)
+	for strings.Contains(text, "\n\n\n") {
+		text = strings.ReplaceAll(text, "\n\n\n", "\n\n")
+	}
+
+	// 4. Strip trailing whitespace from each line
+	lines = strings.Split(text, "\n")
+	for i, l := range lines {
+		lines[i] = strings.TrimRight(l, " \t")
+	}
+	text = strings.Join(lines, "\n")
+
+	// 5. Truncate at ~3000 chars to keep output manageable
+	if len(text) > 3000 {
+		text = text[:3000]
+		// Find last complete line
+		if idx := strings.LastIndex(text, "\n"); idx > 2500 {
+			text = text[:idx]
+		}
+		text += "\n\n[... output truncated]"
+	}
+
+	return strings.TrimSpace(text)
+}
+
+// applyInlineStyles converts **bold** to yellow-bold and `code` to cyan.
+// Must be called AFTER wrapLine so ANSI escape codes don't break width math.
+func applyInlineStyles(text string, boldFn, codeFn func(a ...interface{}) string) string {
+	// Bold: **text** → yellow bold
+	for strings.Contains(text, "**") {
+		start := strings.Index(text, "**")
+		end := strings.Index(text[start+2:], "**")
+		if end < 0 {
+			break
+		}
+		boldText := text[start+2 : start+2+end]
+		text = text[:start] + boldFn(boldText) + text[start+2+end+2:]
+	}
+	// Inline code: `code` → cyan
+	for strings.Contains(text, "`") {
+		start := strings.Index(text, "`")
+		end := strings.Index(text[start+1:], "`")
+		if end < 0 {
+			break
+		}
+		codeText := text[start+1 : start+1+end]
+		text = text[:start] + codeFn(codeText) + text[start+1+end+1:]
+	}
+	return text
+}
+
+// formatAIRemediation converts raw markdown AI remediation text into a
+// nicely formatted, indented, terminal-friendly block with box-drawing
+// characters and ANSI colors.
+func formatAIRemediation(text string) string {
+	if text == "" {
+		return ""
+	}
+
+	text = sanitizeAIResponse(text)
+	if text == "" {
+		return ""
+	}
+
+	headerStyle := color.New(color.FgMagenta, color.Bold).SprintFunc()
+	codeStyle := color.New(color.FgCyan).SprintFunc()
+	dimStyle := color.New(color.Faint).SprintFunc()
+	boldStyle := color.New(color.FgYellow, color.Bold).SprintFunc()
+
+	const maxWidth = 80
+	const indent = "  "
+	bar := dimStyle("│")
+
+	lines := strings.Split(text, "\n")
+
+	// addWrapped wraps raw text, then applies inline styles to each line,
+	// and appends them with the box bar prefix.
+	var processed []string
+	addWrapped := func(rawText string) {
+		for _, wl := range wrapLine(rawText, maxWidth-8) {
+			styled := applyInlineStyles(wl, boldStyle, codeStyle)
+			processed = append(processed, indent+bar+"  "+styled)
+		}
+	}
+
+	inCodeBlock := false
+	consecutiveBlanks := 0
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+
+		// Toggle code block state on fences
+		if strings.HasPrefix(trimmed, "```") {
+			inCodeBlock = !inCodeBlock
+			continue // skip the fence lines themselves
+		}
+
+		// Handle blank lines — max 1 consecutive
+		if trimmed == "" {
+			consecutiveBlanks++
+			if consecutiveBlanks <= 1 {
+				processed = append(processed, indent+bar)
+			}
+			continue
+		}
+		consecutiveBlanks = 0
+
+		if inCodeBlock {
+			// Code lines: dim gutter + cyan text
+			gutter := dimStyle("┊")
+			processed = append(processed, indent+bar+"  "+gutter+"  "+codeStyle(trimmed))
+			continue
+		}
+
+		// Markdown headers -> bold magenta labels
+		if strings.HasPrefix(trimmed, "### ") {
+			title := strings.TrimPrefix(trimmed, "### ")
+			processed = append(processed, indent+bar)
+			processed = append(processed, indent+bar+"  "+headerStyle(title))
+			continue
+		}
+		if strings.HasPrefix(trimmed, "## ") {
+			title := strings.TrimPrefix(trimmed, "## ")
+			processed = append(processed, indent+bar)
+			processed = append(processed, indent+bar+"  "+headerStyle(title))
+			continue
+		}
+		if strings.HasPrefix(trimmed, "# ") {
+			title := strings.TrimPrefix(trimmed, "# ")
+			processed = append(processed, indent+bar)
+			processed = append(processed, indent+bar+"  "+headerStyle(title))
+			continue
+		}
+
+		// Sub-bullets (indented): use hollow bullet
+		if strings.HasPrefix(line, "   -") || strings.HasPrefix(line, "   *") ||
+			strings.HasPrefix(line, "  -") || strings.HasPrefix(line, "  *") {
+			bullet := "  ◦ " + strings.TrimSpace(trimmed[1:])
+			addWrapped(bullet)
+			continue
+		}
+
+		// Bullet points: convert markdown bullets to bullet character
+		if strings.HasPrefix(trimmed, "- ") || strings.HasPrefix(trimmed, "* ") {
+			bullet := "• " + trimmed[2:]
+			addWrapped(bullet)
+			continue
+		}
+
+		// Numbered lists: "1. text", "1) text", "10. text", "1.) text"
+		isNumbered := false
+		if len(trimmed) >= 2 {
+			i := 0
+			for i < len(trimmed) && trimmed[i] >= '0' && trimmed[i] <= '9' {
+				i++
+			}
+			if i > 0 && i < len(trimmed) {
+				rest := trimmed[i:]
+				if strings.HasPrefix(rest, ". ") || strings.HasPrefix(rest, ") ") ||
+					strings.HasPrefix(rest, ".) ") {
+					isNumbered = true
+				}
+			}
+		}
+		if isNumbered {
+			addWrapped(trimmed)
+			continue
+		}
+
+		// Regular text: word-wrap + inline styles
+		addWrapped(trimmed)
+	}
+
+	// Build the final block with box-drawing frame
+	topLabel := color.New(color.Bold).Sprintf("🤖 AI Remediation")
+	topLine := indent + dimStyle("┌─ ") + topLabel + " " + dimStyle(strings.Repeat("─", 45))
+	bottomLine := indent + dimStyle("└"+strings.Repeat("─", 58))
+
+	var out []string
+	out = append(out, "")
+	out = append(out, topLine)
+	out = append(out, indent+bar)
+	out = append(out, processed...)
+	out = append(out, indent+bar)
+	out = append(out, bottomLine)
+
+	return strings.Join(out, "\n")
+}
+
+// wrapLine splits a string into multiple lines, each at most maxWidth
+// characters, breaking at word boundaries when possible.
+func wrapLine(s string, maxWidth int) []string {
+	if len(s) <= maxWidth {
+		return []string{s}
+	}
+
+	var result []string
+	for len(s) > maxWidth {
+		// Find last space before maxWidth
+		idx := strings.LastIndex(s[:maxWidth], " ")
+		if idx <= 0 {
+			idx = maxWidth
+		}
+		result = append(result, s[:idx])
+		s = strings.TrimSpace(s[idx:])
+	}
+	if s != "" {
+		result = append(result, s)
+	}
+	return result
+}
+
 func (r *TextReporter) Write(result *analyzer.ScanResult, w io.Writer) error {
 	bold := color.New(color.Bold).SprintFunc()
 	red := color.New(color.FgRed).SprintFunc()
@@ -83,8 +331,7 @@ func (r *TextReporter) Write(result *analyzer.ScanResult, w io.Writer) error {
 				fmt.Fprintf(w, "  Refs     : %s\n", f.References[0])
 			}
 			if f.AIRemediation != "" {
-				fmt.Fprintf(w, "\n  %s\n", bold("🤖 AI Remediation:"))
-				fmt.Fprintf(w, "  %s\n", f.AIRemediation)
+				fmt.Fprintf(w, "%s\n", formatAIRemediation(f.AIRemediation))
 			}
 		}
 	}
@@ -102,8 +349,7 @@ func (r *TextReporter) Write(result *analyzer.ScanResult, w io.Writer) error {
 				fmt.Fprintf(w, "  History  : Found in commit %s\n", f.CommitHash)
 			}
 			if f.AIRemediation != "" {
-				fmt.Fprintf(w, "\n  %s\n", bold("🤖 AI Remediation:"))
-				fmt.Fprintf(w, "  %s\n", f.AIRemediation)
+				fmt.Fprintf(w, "%s\n", formatAIRemediation(f.AIRemediation))
 			}
 		}
 	}

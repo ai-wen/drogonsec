@@ -39,6 +39,7 @@ go.work.sum
 *.jks
 config.local.yaml
 secrets.yaml
+configs/ai.yaml
 
 # Reports (generated files - add to .gitignore if you don't want them in VCS)
 drogonsec-report.html

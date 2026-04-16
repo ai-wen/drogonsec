@@ -2,8 +2,10 @@ package cli
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/fatih/color"
@@ -11,7 +13,6 @@ import (
 	"github.com/filipi86/drogonsec/internal/analyzer"
 	"github.com/filipi86/drogonsec/internal/config"
 	"github.com/filipi86/drogonsec/internal/reporter"
-	"github.com/schollz/progressbar/v3"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -25,6 +26,7 @@ var (
 	aiProvider    string
 	aiModel       string
 	aiEndpoint    string
+	aiTimeout     int
 	enableGitScan bool
 	disableSAST   bool
 	disableSCA    bool
@@ -58,11 +60,12 @@ func init() {
 	scanCmd.Flags().StringVarP(&outputFormat, "format", "f", "text", "output format: text, json, sarif, html")
 	scanCmd.Flags().StringVarP(&outputFile, "output", "o", "", "output file path (default: stdout)")
 	scanCmd.Flags().StringSliceVar(&ignorePaths, "ignore", []string{}, "paths to ignore (comma-separated)")
-	scanCmd.Flags().BoolVar(&enableAI, "enable-ai", false, "(Coming soon) enable AI remediation suggestions (requires AI_API_KEY)")
-	scanCmd.Flags().StringVar(&aiAPIKey, "ai-key", "", "(Coming soon) AI provider API key (or set AI_API_KEY env var)")
-	scanCmd.Flags().StringVar(&aiProvider, "ai-provider", "anthropic", "(Coming soon) AI provider: anthropic | openai | azure | custom")
-	scanCmd.Flags().StringVar(&aiModel, "ai-model", "", "(Coming soon) AI model name override")
-	scanCmd.Flags().StringVar(&aiEndpoint, "ai-endpoint", "", "(Coming soon) custom AI API endpoint URL")
+	scanCmd.Flags().BoolVar(&enableAI, "enable-ai", false, "enable AI-powered remediation suggestions")
+	scanCmd.Flags().StringVar(&aiAPIKey, "ai-key", "", "AI provider API key (or set AI_API_KEY env var; not needed for ollama)")
+	scanCmd.Flags().StringVar(&aiProvider, "ai-provider", "anthropic", "AI provider: ollama | anthropic | openai | azure | custom")
+	scanCmd.Flags().StringVar(&aiModel, "ai-model", "", "AI model name override (default: deepseek-coder for ollama)")
+	scanCmd.Flags().StringVar(&aiEndpoint, "ai-endpoint", "", "custom AI API endpoint URL")
+	scanCmd.Flags().IntVar(&aiTimeout, "ai-timeout", 0, "AI request timeout in seconds (default: 30 cloud, 120 ollama)")
 	scanCmd.Flags().BoolVar(&enableGitScan, "git-history", false, "scan git history for leaked secrets")
 	scanCmd.Flags().BoolVar(&disableSAST, "no-sast", false, "disable SAST engine")
 	scanCmd.Flags().BoolVar(&disableSCA, "no-sca", false, "disable SCA engine")
@@ -106,8 +109,24 @@ func runScan(cmd *cobra.Command, args []string) error {
 	if apiKey == "" {
 		apiKey = os.Getenv("ANTHROPIC_API_KEY") // silent fallback for backward compat
 	}
+
+	// Auto-detect Ollama when AI enabled but no key provided
 	if enableAI && apiKey == "" {
-		return fmt.Errorf("AI API key required. Use --ai-key flag or set AI_API_KEY env var")
+		switch aiProvider {
+		case "ollama":
+			// Ollama doesn't need an API key — just verify it's running
+		case "anthropic":
+			// Default provider: try to auto-detect local Ollama
+			if detectOllama() {
+				aiProvider = "ollama"
+				fmt.Printf("  %s Ollama detected locally — using local AI (model: %s)\n",
+					color.CyanString("→"), resolveOllamaModel())
+			} else {
+				return fmt.Errorf("AI API key required. Use --ai-key flag, set AI_API_KEY env var, or install Ollama for free local AI")
+			}
+		default:
+			return fmt.Errorf("AI API key required for provider %q. Use --ai-key flag or set AI_API_KEY env var", aiProvider)
+		}
 	}
 
 	// Build scan configuration
@@ -121,6 +140,7 @@ func runScan(cmd *cobra.Command, args []string) error {
 		AIProvider:   aiProvider,
 		AIModel:      aiModel,
 		AIEndpoint:   aiEndpoint,
+		AITimeout:    time.Duration(aiTimeout) * time.Second,
 		GitHistory:   enableGitScan,
 		EnableSAST:   !disableSAST,
 		EnableSCA:    !disableSCA,
@@ -150,7 +170,7 @@ func runScan(cmd *cobra.Command, args []string) error {
 	result.Duration = time.Since(startTime)
 
 	// AI-powered remediation enrichment (runs after scan, avoids import cycle)
-	if cfg.EnableAI && apiKey != "" {
+	if cfg.EnableAI && (apiKey != "" || cfg.AIProvider == "ollama") {
 		enrichResult(result, cfg)
 	}
 
@@ -189,61 +209,146 @@ func runScan(cmd *cobra.Command, args []string) error {
 func enrichResult(result *analyzer.ScanResult, cfg *config.ScanConfig) {
 	client := ai.NewFromScanConfig(cfg)
 
-	// Count findings that need enrichment
-	var toEnrich int
-	for _, f := range result.SASTFindings {
+	// Verify AI backend is reachable before processing
+	if err := client.CheckHealth(); err != nil {
+		fmt.Printf("  %s AI unavailable: %s\n", color.RedString("✗"), err)
+		return
+	}
+
+	// Collect work items
+	type workItem struct {
+		kind  string // "sast" or "leak"
+		index int
+		label string
+	}
+	var items []workItem
+
+	for i, f := range result.SASTFindings {
 		if f.Severity == config.SeverityCritical || f.Severity == config.SeverityHigh {
-			toEnrich++
+			items = append(items, workItem{"sast", i, f.Title})
 		}
 	}
 	maxLeaks := 5
 	if len(result.LeakFindings) < maxLeaks {
 		maxLeaks = len(result.LeakFindings)
 	}
-	toEnrich += maxLeaks
+	for i := 0; i < maxLeaks; i++ {
+		items = append(items, workItem{"leak", i, result.LeakFindings[i].Type})
+	}
 
-	if toEnrich == 0 {
+	total := len(items)
+	if total == 0 {
 		return
 	}
 
-	fmt.Printf("\n  %s Running AI remediation analysis (%d findings)...\n",
-		color.CyanString("→"), toEnrich)
+	dim := color.New(color.Faint).SprintFunc()
 
-	bar := progressbar.NewOptions(toEnrich,
-		progressbar.OptionSetDescription("  AI   "),
-		progressbar.OptionSetWidth(40),
-		progressbar.OptionShowCount(),
-		progressbar.OptionSetTheme(progressbar.Theme{
-			Saucer:        "=",
-			SaucerPadding: " ",
-			BarStart:      "[",
-			BarEnd:        "]",
-		}),
-	)
+	fmt.Printf("\n  %s Running AI remediation (%d findings)...\n\n",
+		color.CyanString("\U0001F916"), total)
 
-	// Enrich SAST findings (critical/high only)
-	enriched := client.EnrichWithRemediation(result.SASTFindings)
-	for i, f := range enriched {
-		result.SASTFindings[i].AIRemediation = f.AIRemediation
-		if f.Severity == config.SeverityCritical || f.Severity == config.SeverityHigh {
-			bar.Add(1)
+	totalStart := time.Now()
+	var errCount int
+	var lastErr error
+
+	for idx, item := range items {
+		// Truncate label to 40 chars
+		label := item.label
+		if len(label) > 40 {
+			label = label[:37] + "..."
+		}
+
+		// Print progress prefix (no newline yet)
+		prefix := fmt.Sprintf("  %s [%d/%d] %s", color.CyanString("\u2192"), idx+1, total, label)
+
+		// Pad with dots to column 58
+		dots := ""
+		padLen := 58 - len(fmt.Sprintf("  \u2192 [%d/%d] %s", idx+1, total, label))
+		if padLen > 2 {
+			dots = " " + strings.Repeat(".", padLen-1) + " "
+		} else {
+			dots = " .. "
+		}
+
+		itemStart := time.Now()
+		var itemErr error
+
+		switch item.kind {
+		case "sast":
+			suggestion, err := client.GetSASTRemediation(result.SASTFindings[item.index])
+			if err != nil {
+				itemErr = err
+			} else {
+				result.SASTFindings[item.index].AIRemediation = suggestion
+			}
+		case "leak":
+			suggestion, err := client.GetLeakRemediation(
+				result.LeakFindings[item.index].Type,
+				result.LeakFindings[item.index].File,
+			)
+			if err != nil {
+				itemErr = err
+			} else {
+				result.LeakFindings[item.index].AIRemediation = suggestion
+			}
+		}
+
+		elapsed := time.Since(itemStart)
+
+		if itemErr != nil {
+			errCount++
+			lastErr = itemErr
+			fmt.Printf("%s%s%s\n", prefix, dim(dots), color.RedString("\u2717 error"))
+		} else if elapsed < 100*time.Millisecond {
+			// Very fast = cache hit
+			fmt.Printf("%s%s%s\n", prefix, dim(dots), color.GreenString("\u26A1 cached"))
+		} else {
+			fmt.Printf("%s%s%s\n", prefix, dim(dots), dim(fmt.Sprintf("%.1fs", elapsed.Seconds())))
 		}
 	}
 
-	// Enrich top N leak findings
-	for i := range result.LeakFindings {
-		if i >= 5 {
-			break
-		}
-		suggestion, err := client.GetLeakRemediation(
-			result.LeakFindings[i].Type,
-			result.LeakFindings[i].File,
-		)
-		if err == nil {
-			result.LeakFindings[i].AIRemediation = suggestion
-		}
-		bar.Add(1)
+	totalElapsed := time.Since(totalStart)
+	cached := client.CacheHits()
+	newCalls := total - errCount - cached
+
+	if errCount > 0 {
+		fmt.Printf("\n  %s AI enrichment: %d error(s): %v\n",
+			color.YellowString("\u26A0"), errCount, lastErr)
+		fmt.Printf("    Tip: check --ai-provider and AI_API_KEY\n")
 	}
 
-	fmt.Printf("\n  %s AI enrichment complete\n", color.GreenString("✓"))
+	// Summary line
+	parts := []string{}
+	if cached > 0 {
+		parts = append(parts, fmt.Sprintf("%d cached", cached))
+	}
+	if newCalls > 0 {
+		parts = append(parts, fmt.Sprintf("%d new", newCalls))
+	}
+
+	summary := ""
+	if len(parts) > 0 {
+		summary = fmt.Sprintf(" (%s)", strings.Join(parts, ", "))
+	}
+
+	fmt.Printf("\n  %s AI enrichment complete%s \u2014 %s total\n",
+		color.GreenString("\u2713"), summary, dim(fmt.Sprintf("%.1fs", totalElapsed.Seconds())))
+}
+
+// detectOllama checks if Ollama is running on the local machine.
+func detectOllama() bool {
+	client := &http.Client{Timeout: 2 * time.Second}
+	resp, err := client.Get("http://127.0.0.1:11434/api/tags")
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode == http.StatusOK
+}
+
+// resolveOllamaModel returns the AI model name for display purposes.
+func resolveOllamaModel() string {
+	if aiModel != "" {
+		return aiModel
+	}
+	return "deepseek-coder"
 }

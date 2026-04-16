@@ -61,6 +61,7 @@ func init() {
 	rootCmd.AddCommand(scanCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(rulesCmd)
+	rootCmd.AddCommand(completionCmd)
 }
 
 func initConfig() {

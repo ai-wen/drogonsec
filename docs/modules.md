@@ -12,7 +12,7 @@ Drogonsec is composed of specialized scanning engines, each targeting a differen
 | **SCA** | `--no-sca` | Dependency and supply chain vulnerability scanning |
 | **Leaks** | `--no-leaks` | Secret and credential detection (50+ patterns) |
 | **IaC** | built-in with SAST | Infrastructure as Code misconfiguration detection |
-| **AI Remediation** | `--enable-ai` to activate | Intelligent fix suggestions *(coming soon)* |
+| **AI Remediation** | `--enable-ai` to activate | AI-powered fix suggestions (Ollama OSS or Cloud) |
 
 ---
 
@@ -200,33 +200,78 @@ Fix      : Set `acl = "private"` and enable `block_public_acls = true`
 
 ---
 
-## AI Remediation Engine *(Coming soon)*
+## AI Remediation Engine
 
 The AI engine provides intelligent, context-aware fix suggestions for detected vulnerabilities. It understands the code context around each finding and generates corrected code snippets.
 
-### Planned Capabilities
+### Capabilities
 
 - Context-aware code fixes tailored to the specific vulnerability
-- Support for multiple AI providers (OpenAI, Anthropic, custom endpoints)
-- High-severity-only mode to reduce noise in large codebases
+- **Ollama + DeepSeek Coder** — free, local, private (recommended for OSS)
+- Cloud providers: Anthropic, OpenAI, Azure, custom endpoints
+- Auto-detection of local Ollama when no API key is provided
+- High-severity-only enrichment (CRITICAL and HIGH findings)
 - Inline corrected code snippets alongside each finding
-- Batch remediation reports exportable as patch files
+- Leak remediation guidance (secret rotation, CI/CD prevention)
 
-### Usage Preview
+### Architecture
+
+```
+CLI (--enable-ai)
+    |
+    v
+ai.Client (internal/ai/claude.go)
+    |
+    +-- isOllama? --> callOllama() --> POST http://127.0.0.1:11434/api/generate
+    |                                  (no auth, 120s timeout)
+    |
+    +-- cloud? ----> callCloud()  --> POST https://api.anthropic.com/v1/messages
+                                     (API key auth, 30s timeout)
+```
+
+### Providers
+
+| Provider | API Key | Default Model | Local |
+|----------|---------|---------------|-------|
+| `ollama` | Not required | `deepseek-coder` | Yes |
+| `anthropic` | Required | `claude-sonnet-4-6` | No |
+| `openai` | Required | *(user-specified)* | No |
+| `azure` | Required | *(user-specified)* | No |
+| `custom` | Required | *(user-specified)* | No |
+
+### Usage
 
 ```bash
-# Set your AI provider API key
-export AI_API_KEY="your-api-key-here"
-
-# Enable AI remediation
+# Local AI — auto-detects Ollama
 drogonsec scan . --enable-ai
 
-# Use a custom AI provider
-drogonsec scan . --enable-ai \
-  --ai-provider openai \
-  --ai-model gpt-4o \
-  --ai-endpoint https://your-endpoint/v1/messages
+# Explicit Ollama with custom model
+drogonsec scan . --enable-ai --ai-provider ollama --ai-model codellama
+
+# Cloud AI
+AI_API_KEY="..." drogonsec scan . --enable-ai --ai-provider anthropic
 ```
+
+### Response Cache
+
+AI responses are cached locally in `~/.drogonsec/ai-cache/` with a 7-day TTL. This means:
+
+- The first scan analyzes each finding via the AI provider
+- Subsequent scans with the same findings return cached responses instantly
+- Cache entries expire automatically after 7 days
+- Delete `~/.drogonsec/ai-cache/` to clear the cache manually
+
+### Bring Your Own AI
+
+Any OpenAI-compatible endpoint works as a custom provider. This includes self-hosted models, corporate proxies, or alternative AI services:
+
+```bash
+AI_API_KEY="your-key" drogonsec scan . --enable-ai \
+  --ai-provider custom \
+  --ai-endpoint https://your-api/v1/messages
+```
+
+Set `--ai-model` to specify which model the endpoint should use. The only requirement is that the endpoint accepts the standard chat completions format.
 
 ### Example AI Output Preview
 

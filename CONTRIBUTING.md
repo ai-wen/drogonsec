@@ -88,7 +88,7 @@ drogonsec/
 │   ├── leaks/              # Secret detection engine
 │   ├── sca/                # Software Composition Analysis
 │   ├── reporter/           # Output formatters (text, JSON, SARIF, HTML)
-│   ├── ai/                 # AI remediation engine (Coming soon)
+│   ├── ai/                 # AI remediation engine (Ollama + Cloud)
 │   ├── cli/                # Banner, scan header, summary UI
 │   └── config/             # Types and configuration structs
 └── rules/                  # YAML rule definitions (community-extensible)

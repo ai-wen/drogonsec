@@ -148,7 +148,7 @@ func PrintDragonBanner() {
 			gn("LEAKS") + dim(" │ ") +
 			gn("GIT-HISTORY") + dim(" │ ") +
 			gn("IaC") + dim(" │ ") +
-			fr("Remediation AI (Coming soon)")))
+			fr("Remediation AI")))
 	fmt.Println(boxLine(
 		fr("►") + " " +
 			nYel("Created by Filipi Pires") +
@@ -172,9 +172,9 @@ func PrintScanBanner(path string, sast, sca, leaks, ai bool, format string, ente
 
 	fmt.Println()
 	fmt.Printf("  %s\n", border)
-	fmt.Printf("  %s  %s\n", cyan("🐉"), white("DragonSec Security Scanner"))
+	fmt.Printf("  %s\n", white("Drogonsec Security Scanner"))
 	fmt.Printf("  %s\n", border)
-	fmt.Printf("  %s  %s\n", dim("Target"), white(path))
+	fmt.Printf("  %s   %s\n", dim("Target"), white(path))
 	fmt.Printf("  %s\n", border)
 
 	fmt.Printf("  %s  %s   %s  %s   %s  %s   %s  %s\n",
@@ -184,7 +184,7 @@ func PrintScanBanner(path string, sast, sca, leaks, ai bool, format string, ente
 		engineDot(ai), aiLabel(ai, enterprise),
 	)
 	fmt.Printf("  %s\n", border)
-	fmt.Printf("  %s %s\n", dim("Format"), white(format))
+	fmt.Printf("  %s   %s\n", dim("Format"), white(format))
 	fmt.Printf("  %s\n\n", border)
 }
 
