@@ -78,8 +78,8 @@ func padTo(s string, w int) string {
 	return s + strings.Repeat(" ", w-vl)
 }
 
-// PrintDragonBanner prints the DrogonSec cyberpunk banner.
-func PrintDragonBanner() {
+// PrintDrogonBanner prints the DrogonSec cyberpunk banner.
+func PrintDrogonBanner() {
 	theme := resolveTheme()
 	fr := theme.frame
 	title := theme.titleText

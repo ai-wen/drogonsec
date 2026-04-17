@@ -1,4 +1,4 @@
-# DragonSec Security Scanner - Makefile
+# DrogonSec Security Scanner - Makefile
 # https://github.com/filipi86/drogonsec
 
 BINARY_NAME    := drogonsec
@@ -15,7 +15,7 @@ MAIN           := ./cmd/drogonsec/main.go
 
 ##@ General
 help: ## Display this help
-	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[36mDragonSec Security Scanner\033[0m - Build System\n\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\n\033[36mDrogonSec Security Scanner\033[0m - Build System\n\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
 
 ##@ Development
 all: lint test build ## Run lint, test, and build
@@ -87,7 +87,7 @@ deps-update: ## Update all dependencies
 	$(GO) mod tidy
 
 ##@ Scan
-scan-self: build ## Scan DragonSec's own source code
+scan-self: build ## Scan DrogonSec's own source code
 	./$(BUILD_DIR)/$(BINARY_NAME) scan . --format text
 
 scan-report: build ## Scan and generate HTML report
@@ -103,7 +103,7 @@ docker-build: ## Build Docker image
 	docker build -t drogonsec-scanner:$(VERSION) .
 	@echo "✓ Docker image built"
 
-docker-run: ## Run DragonSec in Docker
+docker-run: ## Run DrogonSec in Docker
 	docker run --rm -v $(PWD):/scan drogonsec-scanner:$(VERSION) scan /scan
 
 ##@ Cleanup

@@ -9,7 +9,7 @@ import (
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print DragonSec version information",
+	Short: "Print DrogonSec version information",
 	Run: func(cmd *cobra.Command, args []string) {
 		cyan := color.New(color.FgCyan, color.Bold).SprintFunc()
 		fmt.Printf("%s v%s\n", cyan("Drogonsec Security Scanner"), "0.1.0")

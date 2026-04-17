@@ -1,5 +1,5 @@
 #!/bin/bash
-# DragonSec Security Scanner - Setup Script
+# DrogonSec Security Scanner - Setup Script
 # Run: chmod +x scripts/setup.sh && ./scripts/setup.sh
 
 set -e
@@ -20,7 +20,7 @@ banner() {
   echo " |____/|_|  \___/ \__, |\___/|_| |_|_|\___|\___| "
   echo "                  |___/                           "
   echo ""
-  echo "  DragonSec Security Scanner - Setup"
+  echo "  DrogonSec Security Scanner - Setup"
   echo -e "${NC}"
 }
 
@@ -77,7 +77,7 @@ else
 fi
 
 echo ""
-info "Building DragonSec..."
+info "Building DrogonSec..."
 mkdir -p bin
 go build -o bin/drogonsec ./cmd/drogonsec/main.go
 ok "Binary built: ./bin/drogonsec"

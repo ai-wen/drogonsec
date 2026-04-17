@@ -1,4 +1,4 @@
-# DragonSec Security Scanner - Configuration File
+# DrogonSec Security Scanner - Configuration File
 # Place this file at .drogonsec.yaml in your project root or ~/.drogonsec.yaml
 
 # Scan configuration

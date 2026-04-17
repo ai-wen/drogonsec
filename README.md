@@ -132,7 +132,7 @@ Drogonsec Security Scanner
 ### SARIF (GitHub Security Integration)
 ```yaml
 # .github/workflows/security.yml
-- name: DragonSec Scan
+- name: DrogonSec Scan
   run: drogonsec scan . --format sarif --output results.sarif
   
 - name: Upload to GitHub Security

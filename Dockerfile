@@ -1,4 +1,4 @@
-# DragonSec Security Scanner - Dockerfile
+# DrogonSec Security Scanner - Dockerfile
 # Multi-stage build for minimal final image
 
 # ============ BUILD STAGE ============

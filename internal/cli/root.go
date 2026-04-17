@@ -16,7 +16,7 @@ var (
 
 var rootCmd = &cobra.Command{
 	Use:   "drogonsec",
-	Short: "DragonSec - Security Static Analysis & SCA Tool",
+	Short: "DrogonSec - Security Static Analysis & SCA Tool",
 	Long: fmt.Sprintf(`%s
   Open-source SAST · SCA · Secret Detection · IaC Security
   OWASP Top 10:2025 · CWE · CVSS 3.1 · SARIF 2.1
@@ -26,12 +26,12 @@ var rootCmd = &cobra.Command{
        drogonsec scan . --severity HIGH
 
   GitHub: https://github.com/filipi86/drogonsec`,
-		color.New(color.FgHiCyan, color.Bold).Sprint("DragonSec Security Scanner v0.1.0"),
+		color.New(color.FgHiCyan, color.Bold).Sprint("DrogonSec Security Scanner v0.1.0"),
 		color.New(color.FgHiBlack).Sprint("Usage:"),
 	),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if cmd.Name() != "completion" {
-			PrintDragonBanner()
+			PrintDrogonBanner()
 		}
 	},
 }
@@ -53,7 +53,7 @@ func init() {
 	// PreRun hooks for help, so we override HelpFunc here instead.
 	origHelp := rootCmd.HelpFunc()
 	rootCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		PrintDragonBanner()
+		PrintDrogonBanner()
 		origHelp(cmd, args)
 	})
 

@@ -104,6 +104,7 @@ drogonsec/
 | [Installation](installation.md) | All installation methods — source, go install, Docker, manual build |
 | [Usage](usage.md) | CLI commands, flags, output formats, CI/CD integration |
 | [Modules](modules.md) | Engines, rules, language support |
+| [AI Remediation](ai-remediation.md) | AI-powered fix suggestions — Ollama (local/free) + Anthropic, OpenAI, Azure |
 | [CI/CD Pipelines](ci-cd.md) | Pipelines, security gates, Dependabot, multi-environment branding |
 | [Security](security.md) | XSS prevention, HTTPS enforcement, ReDoS protection, supply chain |
 | [FAQ](faq.md) | Troubleshooting and common questions |
