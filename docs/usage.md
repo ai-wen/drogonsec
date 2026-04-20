@@ -22,7 +22,28 @@ drogonsec --version
 
 ## Shell Completion
 
-Drogonsec supports tab-completion for bash, zsh, fish, and PowerShell:
+Drogonsec supports rich tab-completion for bash, zsh, fish, and PowerShell.
+Completion covers subcommands, enum flag values (`--severity`, `--format`,
+`--ai-provider`, `--ai-model`, `--languages`) with inline descriptions, and
+directory-only completion for positional paths.
+
+### Quick install (interactive)
+
+```bash
+# Detect your shell, show a preview, ask for confirmation, then wire it up.
+drogonsec completion install
+
+# Preview only — no files modified:
+drogonsec completion install --dry-run
+
+# Automation:
+drogonsec completion install --yes
+```
+
+The installer writes the completion script to `~/.drogonsec/completion.<shell>`
+(mode `0600`) and appends a single `source` line to your shell profile.
+
+### Manual install
 
 ```bash
 # Bash (add to ~/.bashrc)
@@ -38,7 +59,30 @@ drogonsec completion fish | source
 drogonsec completion powershell | Out-String | Invoke-Expression
 ```
 
-After enabling, press Tab to auto-complete commands, flags, and values.
+### Context-aware model suggestions
+
+When you press `<TAB>` after `--ai-model`, the suggestions depend on the
+`--ai-provider` already on the command line. For example:
+
+```bash
+drogonsec scan . --ai-provider ollama --ai-model <TAB>
+#   deepseek-coder    default, 6.7B code model
+#   codellama         Meta code model
+#   llama3            general-purpose
+#   ...
+
+drogonsec scan . --ai-provider anthropic --ai-model <TAB>
+#   claude-sonnet-4-6    balanced cost/quality (default)
+#   claude-opus-4-7      highest quality
+#   claude-haiku-4-5     fastest / cheapest
+```
+
+### Security note
+
+`--ai-key` deliberately has **no** completion — neither filesystem nor any
+predefined list. This prevents secrets from being captured by shell
+history-completion caches (zsh `_history_complete_word`, fish history, etc.).
+Always pass your API key via `AI_API_KEY` environment variable.
 
 ---
 

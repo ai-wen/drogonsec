@@ -190,6 +190,46 @@ func createInsecureClient() *http.Client {
 	}
 }
 
+// TestEngine_HTML003_AutocompleteFalsePositive guards Issue #15: password
+// inputs that already carry autocomplete=off/new-password/current-password
+// should not trigger HTML-003.
+func TestEngine_HTML003_AutocompleteFalsePositive(t *testing.T) {
+	e := engine.New()
+	tmpDir := t.TempDir()
+
+	cases := []struct {
+		name    string
+		html    string
+		wantHit bool
+	}{
+		{"missing autocomplete triggers", `<input type="password" name="pass">`, true},
+		{"autocomplete=off suppresses", `<input type="password" name="pass" autocomplete="off">`, false},
+		{"autocomplete=new-password suppresses", `<input type="password" autocomplete="new-password">`, false},
+		{"autocomplete=current-password suppresses", `<input type="password" autocomplete="current-password">`, false},
+		{"autocomplete=on still triggers", `<input type="password" autocomplete="on">`, true},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			f := filepath.Join(tmpDir, tc.name+".html")
+			if err := os.WriteFile(f, []byte(tc.html), 0644); err != nil {
+				t.Fatal(err)
+			}
+			findings := e.Analyze(f)
+			hit := false
+			for _, fd := range findings {
+				if fd.RuleID == "HTML-003" {
+					hit = true
+					break
+				}
+			}
+			if hit != tc.wantHit {
+				t.Errorf("HTML-003 on %q: got hit=%v, want %v (findings=%v)", tc.html, hit, tc.wantHit, getRuleIDs(findings))
+			}
+		})
+	}
+}
+
 func TestEngine_RuleCount(t *testing.T) {
 	e := engine.New()
 	count := e.RuleCount()

@@ -13,6 +13,7 @@ import (
 	"github.com/filipi86/drogonsec/internal/config"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/storer"
 )
 
 // LeakFinding mirrors analyzer.LeakFinding to avoid import cycle
@@ -134,7 +135,18 @@ func (d *Detector) ScanGitHistory(repoPath string) ([]LeakFinding, error) {
 	seen := make(map[string]bool)
 	var findings []LeakFinding
 
+	// Cap the number of commits walked to avoid unbounded work on large
+	// repositories (a repo with 1M commits would scan for hours).
+	// 10 000 covers the history of most real projects; users scanning
+	// deeper history should use dedicated tools like trufflehog.
+	const maxCommits = 10000
+	commitsSeen := 0
+
 	err = iter.ForEach(func(c *object.Commit) error {
+		commitsSeen++
+		if commitsSeen > maxCommits {
+			return storer.ErrStop
+		}
 		tree, err := c.Tree()
 		if err != nil {
 			return nil // skip this commit on error
@@ -585,22 +597,39 @@ func redactSecret(s string) string {
 	return s[:3] + strings.Repeat("*", len(s)-3)
 }
 
-// isBinary checks if content appears to be a binary file
+// isBinary checks if content appears to be a binary file.
+// Two-pass heuristic: (1) any null byte in the first 8000 bytes is a
+// strong binary indicator; (2) if >30% of bytes in the sample are
+// non-printable (outside tab/LF/CR and 0x20-0x7E plus high-bit UTF-8),
+// the file is also treated as binary. The second pass catches binary
+// formats that happen not to contain null bytes in their header.
 func isBinary(content []byte) bool {
 	if len(content) == 0 {
 		return false
 	}
-	// Check first 8000 bytes for null bytes (binary indicator)
 	checkLen := 8000
 	if len(content) < checkLen {
 		checkLen = len(content)
 	}
-	for _, b := range content[:checkLen] {
+	sample := content[:checkLen]
+	nonPrintable := 0
+	for _, b := range sample {
 		if b == 0 {
 			return true
 		}
+		// Allow common whitespace + printable ASCII + UTF-8 high bytes.
+		if b == '\t' || b == '\n' || b == '\r' {
+			continue
+		}
+		if b >= 0x20 && b <= 0x7E {
+			continue
+		}
+		if b >= 0x80 {
+			continue
+		}
+		nonPrintable++
 	}
-	return false
+	return nonPrintable*100/len(sample) > 30
 }
 
 // GetFileExtensionIgnoreList returns extensions that should be skipped for leak scanning

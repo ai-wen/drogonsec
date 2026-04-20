@@ -231,13 +231,25 @@ func (a *Analyzer) runLeakDetection(files []string, result *ScanResult) error {
 	)
 
 	detector := leaks.NewDetector()
+	// Load .gitignore from the target path so we can downgrade findings on
+	// intentionally ignored files (e.g. .env) from HIGH/CRITICAL to INFO,
+	// keeping visibility without generating noise (Issue #17).
+	gitignore := leaks.NewGitignoreMatcher(a.cfg.TargetPath)
 
 	for _, file := range files {
 		findings, err := detector.ScanFile(file)
 		if err == nil {
+			ignored := gitignore.IsIgnored(file)
 			for _, lf := range findings {
+				af := leakToFinding(lf)
+				if ignored {
+					af.Severity = config.SeverityInfo
+					af.Description = "[.gitignore] " + af.Description +
+						" — file is listed in .gitignore; severity downgraded to INFO. " +
+						"If this file was ever committed historically, run `drogonsec scan . --git-history` to check."
+				}
 				a.mu.Lock()
-				result.AddLeakFinding(leakToFinding(lf))
+				result.AddLeakFinding(af)
 				a.mu.Unlock()
 			}
 		}

@@ -106,6 +106,13 @@ func New(cfg ClientConfig) *Client {
 		cfg: cfg,
 		httpClient: &http.Client{
 			Timeout: timeout,
+			// Refuse redirects. Go's default client preserves custom auth
+			// headers (x-api-key) across redirects — a 302 from a hostile or
+			// misconfigured endpoint could leak credentials to a third-party
+			// host. Legitimate AI providers do not redirect POST API calls.
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return fmt.Errorf("refusing redirect from %s to %s (would leak credentials)", via[0].URL.Host, req.URL.Host)
+			},
 		},
 	}
 }
@@ -201,7 +208,12 @@ func (c *Client) CheckHealth() error {
 		return nil
 	}
 	healthURL := strings.Replace(c.cfg.Endpoint, "/api/generate", "/api/tags", 1)
-	client := &http.Client{Timeout: 3 * time.Second}
+	client := &http.Client{
+		Timeout: 3 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return fmt.Errorf("refusing redirect during health check")
+		},
+	}
 	resp, err := client.Get(healthURL)
 	if err != nil {
 		return fmt.Errorf("ollama not reachable at %s: %w", healthURL, err)

@@ -230,19 +230,35 @@ AI_API_KEY="your-key" drogonsec scan . --enable-ai \
   --ai-endpoint https://your-api/v1/messages
 ```
 
+### Security Hardening
+
+The AI client includes several defensive controls, documented in [docs/security.md](docs/security.md):
+
+- **No HTTP redirects** — refuses 3xx responses to prevent `x-api-key` leaking to a third-party host via `302 Location: …`
+- **HTTPS enforcement** — non-loopback HTTP endpoints are rejected; only `https://` or `http://127.0.0.1`/`http://localhost` are accepted
+- **HMAC-SHA256 cache integrity** — every cached response is tagged with a per-user key under `~/.drogonsec/ai-cache/cache.key` (`0600`); tampered entries are discarded on read
+- **Ollama shape validation** — auto-detection requires a valid `{"models":[...]}` response from `/api/tags`, not just HTTP 200 on port 11434
+- **Cache + output perms** — cache dir is `0700`, every cached file and every `--output` report is `0600` (reports embed code snippets and secrets)
+
 ---
 
 ## Shell Completion
 
-Drogonsec supports tab-completion for bash, zsh, fish, and PowerShell. See the [Usage docs](https://cross-intel.com/opensource/drogonsec/usage) for details.
+Drogonsec supports rich tab-completion for bash, zsh, fish, and PowerShell — with inline descriptions for enum flags, context-aware model suggestions, and directory-only completion for scan paths. See the [Usage docs](docs/usage.md#shell-completion) for details.
 
 ```bash
-# Bash
-source <(drogonsec completion bash)
+# Interactive install (detects shell, previews, asks for confirmation)
+drogonsec completion install
 
-# Zsh
+# Preview only — no files modified
+drogonsec completion install --dry-run
+
+# Manual (bash / zsh)
+source <(drogonsec completion bash)
 source <(drogonsec completion zsh)
 ```
+
+> **Security note:** `--ai-key` is deliberately excluded from completion so API keys are never captured by shell history-completion caches. Always pass keys via `AI_API_KEY`.
 
 ---
 

@@ -40,6 +40,12 @@ type Rule struct {
 	Title       string
 	Description string
 	Pattern     *regexp.Regexp
+	// AntiPattern, when non-nil and matching the same line, suppresses
+	// the finding. Used to avoid false positives when a mitigation marker
+	// (e.g., autocomplete="off") is already present on the matched line.
+	// Go RE2 has no negative lookahead, so we model it as an explicit
+	// second-pass check.
+	AntiPattern *regexp.Regexp
 	Severity    config.Severity
 	OWASP       config.OWASPCategory
 	CWE         string
@@ -104,6 +110,9 @@ func (e *Engine) Analyze(filePath string) []Finding {
 			line := scanner.Text()
 
 			if rule.Pattern.MatchString(line) {
+				if rule.AntiPattern != nil && rule.AntiPattern.MatchString(line) {
+					continue
+				}
 				col := findColumn(line, rule.Pattern)
 				snippet := buildSnippet(lines, lineNum, 3)
 

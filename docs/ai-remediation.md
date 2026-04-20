@@ -248,15 +248,26 @@ DrogonSec caches AI responses locally to avoid redundant API calls across repeat
 | Property | Value |
 |----------|-------|
 | Cache location | `~/.drogonsec/ai-cache/` |
+| Directory permission | `0700` (user-only) |
+| File permission | `0600` (user-only) |
 | TTL | 7 days |
 | Cache key | `SHA256(provider + model + ruleID + severity + code_snippet)` |
+| Integrity tag | `HMAC-SHA256(response)` — per-user key in `~/.drogonsec/ai-cache/cache.key` (0600) |
 | Scope | Per provider + model combination |
 
 Cache hits are shown in scan progress with the `⚡` symbol. Expired entries are removed automatically on the next read.
 
+### Integrity guarantee
+
+Every cached entry is HMAC-tagged on write and verified on read. If an entry is tampered with on disk (e.g., on a shared CI filesystem), the mismatching HMAC causes the entry to be discarded and a fresh call is made — DrogonSec will never display un-verified remediation text as if it came from the AI provider.
+
 ---
 
 ## Privacy & Security
+
+### No HTTP redirects followed
+
+The AI HTTP client refuses to follow HTTP 3xx redirects. Go's default client preserves the `x-api-key` header across redirects — a hostile or misconfigured endpoint responding with `302 Location: https://evil.example.com/` would otherwise leak the API key to a third-party host. DrogonSec fails loudly with an explicit error instead of silently leaking credentials.
 
 ### Endpoint validation
 

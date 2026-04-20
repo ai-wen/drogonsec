@@ -395,6 +395,10 @@ func htmlRules() []Rule {
 			Title:       "Autocomplete enabled on sensitive input",
 			Description: "Autocomplete on password fields can expose credentials in shared environments.",
 			Pattern:     mustCompile(`(?i)<input[^>]+(type\s*=\s*["']password["'])[^>]*>`),
+			// Suppress finding when autocomplete attribute is already set to
+			// off/new-password/current-password — those are the WCAG-recommended
+			// safe values and already mitigate the issue (Issue #15).
+			AntiPattern: mustCompile(`(?i)autocomplete\s*=\s*["'](off|new-password|current-password)["']`),
 			OWASP:       config.OWASP_A07_AuthenticationFailures, CWE: "CWE-200", CVSS: 3.7,
 			References:  []string{"https://cwe.mitre.org/data/definitions/200.html"},
 			Remediation: "Add autocomplete=\"off\" to sensitive input fields: <input type=\"password\" autocomplete=\"off\">",

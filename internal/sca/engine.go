@@ -224,6 +224,43 @@ func (e *Engine) checkKnownVulnerabilities(deps []Dependency) []Finding {
 	return findings
 }
 
+// stripVersionPrefix removes the leading npm/composer version range
+// operator (^, ~, >=, <=, >, <, =) from a version string. Unlike
+// strings.TrimLeft, it only strips at most one operator at the start —
+// strings.TrimLeft("^>=1.0", "^~>=<") would collapse three operators
+// into "1.0" and silently mis-parse a dependency like "^>=1.0".
+func stripVersionPrefix(v string) string {
+	v = strings.TrimSpace(v)
+	for _, op := range []string{">=", "<=", "==", "!=", "~>", "^", "~", ">", "<", "="} {
+		if strings.HasPrefix(v, op) {
+			return strings.TrimSpace(strings.TrimPrefix(v, op))
+		}
+	}
+	return v
+}
+
+// maxManifestSize caps the size of any manifest file we will parse.
+// Rationale: the JSON/YAML parsers load the full file into memory before
+// validating structure. A crafted or accidentally oversized manifest
+// (e.g. 2 GiB package.json) would OOM the scanner mid-run in CI. 10 MiB
+// is three orders of magnitude above any legitimate manifest we have
+// seen in the wild.
+const maxManifestSize = 10 * 1024 * 1024
+
+// readManifestFile reads a manifest with a hard size cap and returns a
+// clear error if the file exceeds it. Use this instead of os.ReadFile
+// for any manifest that will be fed into json.Unmarshal / yaml.Unmarshal.
+func readManifestFile(path string) ([]byte, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	if info.Size() > maxManifestSize {
+		return nil, fmt.Errorf("manifest %s exceeds %d bytes (got %d) — refusing to parse", path, maxManifestSize, info.Size())
+	}
+	return os.ReadFile(path)
+}
+
 // ============= PARSERS =============
 
 // PackageJSONParser parses Node.js package.json files
@@ -232,7 +269,7 @@ type PackageJSONParser struct{}
 func (p *PackageJSONParser) Name() string    { return "npm/yarn" }
 func (p *PackageJSONParser) Files() []string { return []string{"package.json"} }
 func (p *PackageJSONParser) Parse(path string) ([]Dependency, error) {
-	data, err := os.ReadFile(path)
+	data, err := readManifestFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -250,7 +287,7 @@ func (p *PackageJSONParser) Parse(path string) ([]Dependency, error) {
 		for name, version := range m {
 			deps = append(deps, Dependency{
 				Name:      name,
-				Version:   strings.TrimLeft(version, "^~>=<"),
+				Version:   stripVersionPrefix(version),
 				Ecosystem: "npm",
 				File:      path,
 			})
@@ -269,7 +306,7 @@ func (p *RequirementsTXTParser) Files() []string {
 	return []string{"requirements.txt", "requirements-dev.txt"}
 }
 func (p *RequirementsTXTParser) Parse(path string) ([]Dependency, error) {
-	data, err := os.ReadFile(path)
+	data, err := readManifestFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +344,7 @@ type GemfileParser struct{}
 func (p *GemfileParser) Name() string    { return "gem" }
 func (p *GemfileParser) Files() []string { return []string{"Gemfile.lock"} }
 func (p *GemfileParser) Parse(path string) ([]Dependency, error) {
-	data, err := os.ReadFile(path)
+	data, err := readManifestFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +376,7 @@ type GoModParser struct{}
 func (p *GoModParser) Name() string    { return "go" }
 func (p *GoModParser) Files() []string { return []string{"go.mod"} }
 func (p *GoModParser) Parse(path string) ([]Dependency, error) {
-	data, err := os.ReadFile(path)
+	data, err := readManifestFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -377,7 +414,7 @@ type PomXMLParser struct{}
 func (p *PomXMLParser) Name() string    { return "maven" }
 func (p *PomXMLParser) Files() []string { return []string{"pom.xml"} }
 func (p *PomXMLParser) Parse(path string) ([]Dependency, error) {
-	data, err := os.ReadFile(path)
+	data, err := readManifestFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -415,7 +452,7 @@ type ComposerParser struct{}
 func (p *ComposerParser) Name() string    { return "composer" }
 func (p *ComposerParser) Files() []string { return []string{"composer.json"} }
 func (p *ComposerParser) Parse(path string) ([]Dependency, error) {
-	data, err := os.ReadFile(path)
+	data, err := readManifestFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -436,7 +473,7 @@ func (p *ComposerParser) Parse(path string) ([]Dependency, error) {
 			}
 			deps = append(deps, Dependency{
 				Name:      name,
-				Version:   strings.TrimLeft(version, "^~>=<"),
+				Version:   stripVersionPrefix(version),
 				Ecosystem: "packagist",
 				File:      path,
 			})
@@ -453,7 +490,7 @@ type PubspecParser struct{}
 func (p *PubspecParser) Name() string    { return "dart" }
 func (p *PubspecParser) Files() []string { return []string{"pubspec.yaml", "pubspec.yml"} }
 func (p *PubspecParser) Parse(path string) ([]Dependency, error) {
-	data, err := os.ReadFile(path)
+	data, err := readManifestFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -474,7 +511,7 @@ func (p *PubspecParser) Parse(path string) ([]Dependency, error) {
 			}
 			version := ""
 			if v, ok := ver.(string); ok {
-				version = strings.TrimLeft(v, "^~>=<")
+				version = stripVersionPrefix(v)
 			}
 			deps = append(deps, Dependency{
 				Name:      name,

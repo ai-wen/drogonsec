@@ -160,13 +160,19 @@ func (c *osvClient) queryBatch(deps []Dependency) ([]Finding, error) {
 	}
 	defer resp.Body.Close()
 
+	// Cap any response body we read from OSV (success or error) so a rogue
+	// or compromised endpoint cannot OOM the scanner by streaming gigabytes.
+	// 32 MiB is ~10× the largest real OSV batch response observed.
+	const maxOSVResponseBytes = 32 * 1024 * 1024
+	limited := io.LimitReader(resp.Body, maxOSVResponseBytes)
+
 	if resp.StatusCode != http.StatusOK {
-		b, _ := io.ReadAll(resp.Body)
+		b, _ := io.ReadAll(limited)
 		return nil, fmt.Errorf("OSV API returned %d: %s", resp.StatusCode, string(b))
 	}
 
 	var result osvBatchResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.NewDecoder(limited).Decode(&result); err != nil {
 		return nil, fmt.Errorf("OSV API response decode error: %w", err)
 	}
 

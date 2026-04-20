@@ -20,7 +20,9 @@ Affected fields across SAST, Leaks, and SCA findings:
 | Leaks | Type, File, RuleID, Match, Description, AI Remediation |
 | SCA | PackageName, PackageVersion, CVE, ManifestFile, FixedVersion, Ecosystem, Description, Advisory |
 
-This prevents a malicious file path, variable name, or secret value in the scanned codebase from injecting scripts into the generated report when opened in a browser.
+### URL scheme allow-list for advisory links
+
+`html.EscapeString` neutralises quote/angle-bracket injection but does **not** block dangerous URL schemes like `javascript:`, `data:`, or `vbscript:`. For advisory links rendered as `<a href="…">`, DrogonSec additionally validates the scheme through a `safeURL` helper that only passes `http` and `https` through; anything else (including relative/protocol-relative URLs) is rewritten to `#`. Every advisory link also carries `rel="noopener noreferrer nofollow"` and `target="_blank"` to prevent tab-nabbing and referrer leaks.
 
 ---
 
@@ -83,3 +85,53 @@ Scans direct and transitive dependencies against the [Go Vulnerability Database]
 Both checks run before compilation and block the build if they detect an issue.
 
 See [CI/CD Pipelines](ci-cd.md) for the full pipeline details.
+
+---
+
+## AI Client Hardening
+
+The AI remediation client ([AI Remediation](ai-remediation.md)) adds several defensive controls on top of HTTPS enforcement:
+
+### No HTTP redirects
+
+Go's default `http.Client` preserves the `x-api-key` header when following a redirect — a hostile endpoint responding with `302 Location: …` could exfiltrate your API key to a third-party host. DrogonSec installs a `CheckRedirect` hook that refuses any redirect and surfaces an explicit error. Legitimate AI providers do not redirect POSTs to their inference endpoints, so this is safe by construction.
+
+### Cache integrity (HMAC-SHA256)
+
+Cached AI responses live under `~/.drogonsec/ai-cache/` with mode `0600`. Every entry is additionally tagged with an HMAC-SHA256 over the response body, using a per-user 32-byte random key stored in `~/.drogonsec/ai-cache/cache.key` (`0600`). On read, a tag mismatch causes the entry to be discarded — protecting you against cache-poisoning on shared or CI filesystems where an attacker might gain write access without read.
+
+### Ollama shape validation
+
+Auto-detecting a local Ollama requires more than `HTTP 200` on port `11434` — DrogonSec also requires the response to decode as the `/api/tags` JSON shape (a `{"models": [...]}` object). Any other service incidentally listening on that port is rejected, so prompts are never forwarded to an unrelated daemon.
+
+---
+
+## Report Output Permissions
+
+When `--output <file>` is used for `text`, `json`, `sarif`, or `html` reports, the file is created with mode `0600` (user-only). Reports embed vulnerable code snippets, matched secrets, and AI remediation text; on shared CI runners or workstations they should not be world-readable by default. If you need the report to be readable by other accounts, adjust the permissions after generation.
+
+---
+
+## Manifest Size Limits (SCA)
+
+The SCA engine parses `package.json`, `composer.json`, `pubspec.yaml`, `Gemfile.lock`, `requirements.txt`, `go.mod`, and `pom.xml`. JSON/YAML parsers load the full file before validating structure, so DrogonSec enforces a `10 MiB` size cap per manifest before parsing. Custom YAML rule files (loaded via `--rules-dir`) are capped at `5 MiB`. This prevents a malicious or accidentally oversized manifest from OOM-killing the scanner in CI.
+
+OSV API responses are additionally capped at `32 MiB` via `io.LimitReader` so a compromised or misbehaving OSV proxy cannot exhaust scanner memory by streaming gigabytes of data.
+
+---
+
+## `.gitignore` Awareness (Leaks)
+
+When `.gitignore` at the repo root matches a file, any secret finding on that file is **downgraded to INFO severity** with a marker in the description. The finding is kept visible because a historical accidental commit remains a real risk (check with `--git-history`), but it no longer generates HIGH/CRITICAL noise for files the developer explicitly excluded from version control. See [Issue #17](https://github.com/filipi86/drogonsec/issues/17).
+
+---
+
+## Rules Directory Path Resolution
+
+Custom YAML rules loaded via `--rules-dir` have their root canonicalised with `filepath.EvalSymlinks` before walking, and any symlink entries encountered inside the tree are skipped. This prevents a committed symlink from silently redirecting rule loading to a path outside the intended directory (e.g., `rules/evil -> /etc`).
+
+---
+
+## Git History Commit Cap
+
+`--git-history` walks up to `10 000` commits. On repositories with millions of commits (monorepos, mirrors), the previous unbounded walk would consume hours of CPU; the cap keeps scan time predictable. For deeper history audits, use a dedicated tool like `trufflehog --max-depth`.

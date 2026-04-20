@@ -5,6 +5,7 @@ import (
 	"fmt"
 	htmlpkg "html"
 	"io"
+	"net/url"
 	"path/filepath"
 	"strings"
 	"time"
@@ -13,6 +14,25 @@ import (
 	"github.com/filipi86/drogonsec/internal/analyzer"
 	"github.com/filipi86/drogonsec/internal/config"
 )
+
+// safeURL returns the input only if it parses as an http/https URL.
+// Any other scheme (javascript:, data:, file:, vbscript:, ...) becomes "#"
+// so that href/src attributes rendered in HTML reports cannot execute script.
+func safeURL(raw string) string {
+	if raw == "" {
+		return "#"
+	}
+	u, err := url.Parse(strings.TrimSpace(raw))
+	if err != nil {
+		return "#"
+	}
+	switch strings.ToLower(u.Scheme) {
+	case "http", "https":
+		return u.String()
+	default:
+		return "#"
+	}
+}
 
 // Reporter defines the interface for report generation
 type Reporter interface {
@@ -722,8 +742,8 @@ func (r *HTMLReporter) Write(result *analyzer.ScanResult, w io.Writer) error {
     <div class="meta-item"><strong>Ecosystem:</strong> %s</div>
   </div>
   <p style="color:#94a3b8;font-size:0.875rem">%s</p>
-  <div class="remediation">Upgrade to version %s or higher. See: <a href="%s" style="color:#38bdf8">%s</a></div>
-</div>`, severityBadge(f.Severity), htmlpkg.EscapeString(f.PackageName), htmlpkg.EscapeString(f.PackageVersion), htmlpkg.EscapeString(f.CVE), f.CVSS, htmlpkg.EscapeString(f.ManifestFile), htmlpkg.EscapeString(f.FixedVersion), htmlpkg.EscapeString(f.Ecosystem), htmlpkg.EscapeString(f.Description), htmlpkg.EscapeString(f.FixedVersion), htmlpkg.EscapeString(f.Advisory), htmlpkg.EscapeString(f.CVE))
+  <div class="remediation">Upgrade to version %s or higher. See: <a href="%s" rel="noopener noreferrer nofollow" target="_blank" style="color:#38bdf8">%s</a></div>
+</div>`, severityBadge(f.Severity), htmlpkg.EscapeString(f.PackageName), htmlpkg.EscapeString(f.PackageVersion), htmlpkg.EscapeString(f.CVE), f.CVSS, htmlpkg.EscapeString(f.ManifestFile), htmlpkg.EscapeString(f.FixedVersion), htmlpkg.EscapeString(f.Ecosystem), htmlpkg.EscapeString(f.Description), htmlpkg.EscapeString(f.FixedVersion), htmlpkg.EscapeString(safeURL(f.Advisory)), htmlpkg.EscapeString(f.CVE))
 		}
 		html += `</div>`
 	}

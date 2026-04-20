@@ -463,3 +463,35 @@ func TestCallOllama_ResponseSizeLimit(t *testing.T) {
 		t.Error("expected error for oversized response")
 	}
 }
+
+// TestClient_RefusesRedirects verifies that the AI HTTP client refuses to
+// follow redirects so that credentials (x-api-key) are never leaked to
+// third-party hosts.
+func TestClient_RefusesRedirects(t *testing.T) {
+	// Server A returns 302 to server B.
+	serverB := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// If we ever get here, the redirect was followed — test fails.
+		t.Errorf("redirect was followed; API key would have leaked to %s", r.Host)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer serverB.Close()
+
+	serverA := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, serverB.URL, http.StatusFound)
+	}))
+	defer serverA.Close()
+
+	c := New(ClientConfig{
+		APIKey:   "sk-ant-secret",
+		Provider: "anthropic",
+		Endpoint: serverA.URL,
+	})
+
+	_, err := c.callCloud("prompt", "system", 1024)
+	if err == nil {
+		t.Fatal("expected error from refused redirect, got nil")
+	}
+	if !strings.Contains(err.Error(), "refusing redirect") {
+		t.Errorf("expected 'refusing redirect' in error, got: %v", err)
+	}
+}

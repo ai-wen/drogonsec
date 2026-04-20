@@ -34,12 +34,30 @@ type YAMLRuleFile struct {
 
 // LoadYAMLRules scans a directory tree for *.yaml/*.yml rule files and loads them
 // into the engine. Returns the number of rules loaded and any non-fatal errors.
+//
+// Security note: the rules directory is resolved to an absolute, symlink-free
+// canonical path up front via filepath.EvalSymlinks. This ensures that if the
+// user (or a malicious commit in the repo) points --rules-dir at a symlink
+// aimed outside the intended location, we at least log the target we are
+// actually reading. filepath.WalkDir itself does not follow symlinks inside
+// the tree, so nested symlinked rule files are silently skipped.
 func (e *Engine) LoadYAMLRules(rulesDir string) (int, []error) {
 	var errs []error
 	loaded := 0
 
-	err := filepath.WalkDir(rulesDir, func(path string, d fs.DirEntry, err error) error {
+	resolved, err := filepath.EvalSymlinks(rulesDir)
+	if err != nil {
+		return 0, []error{fmt.Errorf("resolve rules-dir %s: %w", rulesDir, err)}
+	}
+
+	err = filepath.WalkDir(resolved, func(path string, d fs.DirEntry, err error) error {
 		if err != nil || d.IsDir() {
+			return nil
+		}
+		// Skip entries whose type indicates a symlink inside the tree —
+		// WalkDir does not follow them, but we also don't want to parse
+		// a symlinked YAML that could point to /etc/passwd or similar.
+		if d.Type()&fs.ModeSymlink != 0 {
 			return nil
 		}
 
@@ -55,14 +73,27 @@ func (e *Engine) LoadYAMLRules(rulesDir string) (int, []error) {
 	})
 
 	if err != nil {
-		errs = append(errs, fmt.Errorf("walk %s: %w", rulesDir, err))
+		errs = append(errs, fmt.Errorf("walk %s: %w", resolved, err))
 	}
 
 	return loaded, errs
 }
 
+// maxYAMLRuleFileSize caps the size of any user-supplied YAML rule file.
+// Parsing a huge YAML document loads it into memory before we can reject
+// it structurally, so we guard with a stat-check first.
+const maxYAMLRuleFileSize = 5 * 1024 * 1024
+
 // loadYAMLFile parses a single YAML rule file and registers its rules
 func (e *Engine) loadYAMLFile(path string) (int, []error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return 0, []error{fmt.Errorf("stat %s: %w", path, err)}
+	}
+	if info.Size() > maxYAMLRuleFileSize {
+		return 0, []error{fmt.Errorf("rule file %s exceeds %d bytes (got %d) — refusing to parse", path, maxYAMLRuleFileSize, info.Size())}
+	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return 0, []error{fmt.Errorf("read %s: %w", path, err)}

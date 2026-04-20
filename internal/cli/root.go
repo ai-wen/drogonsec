@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -30,9 +31,14 @@ var rootCmd = &cobra.Command{
 		color.New(color.FgHiBlack).Sprint("Usage:"),
 	),
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		if cmd.Name() != "completion" {
-			PrintDrogonBanner()
+		// Skip the banner for completion commands and Cobra's hidden
+		// __complete/__completeNoDesc helpers — printing it there would
+		// pollute shell-completion output with the banner's lines.
+		name := cmd.Name()
+		if name == "completion" || strings.HasPrefix(name, "__complete") {
+			return
 		}
+		PrintDrogonBanner()
 	},
 }
 
@@ -45,6 +51,11 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default: .drogonsec.yaml)")
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "verbose output")
+
+	// Tab-complete --config only with .yaml/.yml files.
+	_ = rootCmd.RegisterFlagCompletionFunc("config", func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+		return []string{"yaml", "yml"}, cobra.ShellCompDirectiveFilterFileExt
+	})
 
 	viper.BindPFlag("verbose", rootCmd.PersistentFlags().Lookup("verbose"))
 

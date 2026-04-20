@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -74,6 +76,43 @@ func init() {
 	scanCmd.Flags().StringSliceVar(&languages, "languages", []string{}, "specific languages to scan (default: auto-detect)")
 	scanCmd.Flags().IntVar(&maxWorkers, "workers", 4, "number of parallel workers")
 	scanCmd.Flags().StringVar(&rulesDir, "rules-dir", "", "path to custom YAML rules directory")
+
+	// Tab completion: enum values and path types for every flag.
+	// Rationale: Cobra's default completer attempts filename completion on
+	// every string flag, which is noisy and — for --ai-key — would surface
+	// cached shell suggestions for a secret. Registering explicit functions
+	// gives users useful suggestions without leaking anything.
+	_ = scanCmd.RegisterFlagCompletionFunc("format", func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+		return completionFormat, cobra.ShellCompDirectiveNoFileComp
+	})
+	_ = scanCmd.RegisterFlagCompletionFunc("severity", func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+		return completionSeverity, cobra.ShellCompDirectiveNoFileComp
+	})
+	_ = scanCmd.RegisterFlagCompletionFunc("ai-provider", func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+		return completionAIProvider, cobra.ShellCompDirectiveNoFileComp
+	})
+	_ = scanCmd.RegisterFlagCompletionFunc("ai-model", completeAIModel)
+	_ = scanCmd.RegisterFlagCompletionFunc("languages", func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+		return completionLanguages, cobra.ShellCompDirectiveNoFileComp
+	})
+	// Directory-only flags.
+	_ = scanCmd.RegisterFlagCompletionFunc("rules-dir", func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+		return nil, cobra.ShellCompDirectiveFilterDirs
+	})
+	_ = scanCmd.RegisterFlagCompletionFunc("ignore", func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+		return nil, cobra.ShellCompDirectiveFilterDirs
+	})
+	// Security: never offer filesystem completion for the API key — we
+	// don't want `drogonsec scan . --ai-key <TAB>` to enumerate files or
+	// pull secrets out of shell history caches.
+	_ = scanCmd.RegisterFlagCompletionFunc("ai-key", cobra.NoFileCompletions)
+	_ = scanCmd.RegisterFlagCompletionFunc("ai-endpoint", cobra.NoFileCompletions)
+	_ = scanCmd.RegisterFlagCompletionFunc("ai-timeout", cobra.NoFileCompletions)
+	_ = scanCmd.RegisterFlagCompletionFunc("workers", cobra.NoFileCompletions)
+	// Positional argument: scan path — directories only.
+	scanCmd.ValidArgsFunction = func(*cobra.Command, []string, string) ([]string, cobra.ShellCompDirective) {
+		return nil, cobra.ShellCompDirectiveFilterDirs
+	}
 
 	// Bind with viper for config file support
 	viper.BindPFlag("output.format", scanCmd.Flags().Lookup("format"))
@@ -182,7 +221,11 @@ func runScan(cmd *cobra.Command, args []string) error {
 
 	output := os.Stdout
 	if outputFile != "" {
-		f, err := os.Create(outputFile)
+		// Create the report with user-only perms (0o600). Reports embed
+		// vulnerable code snippets, rule matches, and in some cases AI
+		// remediation text; on shared or CI filesystems they should not
+		// be world-readable by default.
+		f, err := os.OpenFile(outputFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
 		if err != nil {
 			return fmt.Errorf("cannot create output file: %w", err)
 		}
@@ -335,14 +378,37 @@ func enrichResult(result *analyzer.ScanResult, cfg *config.ScanConfig) {
 }
 
 // detectOllama checks if Ollama is running on the local machine.
+// A raw HTTP 200 on port 11434 is not sufficient — any service could be
+// bound there. We additionally require the response to decode as the
+// /api/tags shape (a JSON object with a "models" array). This prevents
+// an unrelated local service from being mistaken for Ollama and having
+// prompts forwarded to it.
 func detectOllama() bool {
-	client := &http.Client{Timeout: 2 * time.Second}
+	client := &http.Client{
+		Timeout: 2 * time.Second,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return fmt.Errorf("refusing redirect during Ollama detection")
+		},
+	}
 	resp, err := client.Get("http://127.0.0.1:11434/api/tags")
 	if err != nil {
 		return false
 	}
 	defer resp.Body.Close()
-	return resp.StatusCode == http.StatusOK
+	if resp.StatusCode != http.StatusOK {
+		return false
+	}
+	// Cap the body and require it to parse as the Ollama /api/tags shape.
+	var payload struct {
+		Models []struct {
+			Name string `json:"name"`
+		} `json:"models"`
+	}
+	limited := io.LimitReader(resp.Body, 1*1024*1024)
+	if err := json.NewDecoder(limited).Decode(&payload); err != nil {
+		return false
+	}
+	return true
 }
 
 // resolveOllamaModel returns the AI model name for display purposes.
