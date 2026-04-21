@@ -70,6 +70,7 @@ func init() {
 
 	// Register sub-commands
 	rootCmd.AddCommand(scanCmd)
+	rootCmd.AddCommand(monitorCmd)
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(rulesCmd)
 	rootCmd.AddCommand(completionCmd)
