@@ -148,7 +148,7 @@ func PrintDrogonBanner() {
 			gn("LEAKS") + dim(" │ ") +
 			gn("GIT-HISTORY") + dim(" │ ") +
 			gn("IaC") + dim(" │ ") +
-			fr("Remediation AI")))
+			gn("Remediation AI")))
 	fmt.Println(boxLine(
 		fr("►") + " " +
 			nYel("Created by Filipi Pires") +
