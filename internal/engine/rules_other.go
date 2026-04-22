@@ -349,15 +349,11 @@ func kubernetesRules() []Rule {
 			References:  []string{"https://cwe.mitre.org/data/definitions/250.html"},
 			Remediation: "Remove privileged: true. Use specific capabilities (add: [NET_BIND_SERVICE]) instead of full privileges.",
 		},
-		{
-			ID: "K8S-003", Language: config.LangKubernetes, Severity: config.SeverityMedium,
-			Title:       "Resource limits not set",
-			Description: "Containers without CPU/memory limits can be used for resource exhaustion DoS.",
-			Pattern:     mustCompile(`(?i)containers:\s*\n(?:(?!resources:)[\s\S]){1,500}image:`),
-			OWASP:       config.OWASP_A02_SecurityMisconfiguration, CWE: "CWE-770", CVSS: 5.3,
-			References:  []string{"https://cwe.mitre.org/data/definitions/770.html"},
-			Remediation: "Always set resources.limits.cpu and resources.limits.memory for all containers.",
-		},
+		// K8S-003 (Resource limits not set) was removed: the original pattern used
+		// a multi-line negative lookahead which RE2 does not support, and the
+		// engine scans line-by-line, so this check cannot be implemented as a
+		// regex. Proper detection requires a YAML parser and will be reintroduced
+		// when that support lands.
 		{
 			ID: "K8S-004", Language: config.LangKubernetes, Severity: config.SeverityHigh,
 			Title:       "Hardcoded secret in environment variable",

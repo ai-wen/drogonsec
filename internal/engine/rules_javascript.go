@@ -239,7 +239,9 @@ func javascriptRules() []Rule {
 			Remediation: "Remove sensitive data from logs. Use structured logging with field-level masking. Implement a centralized logging strategy.",
 		},
 
-		// A10:2025 - Unhandled promise rejection
+		// A10:2025 - Unhandled promise rejection.
+		// Go RE2 has no negative lookahead, so we detect `.then(` with Pattern
+		// and suppress when `.catch(` is present on the same line via AntiPattern.
 		{
 			ID:       "JS-014",
 			Language: config.LangJavaScript,
@@ -247,10 +249,11 @@ func javascriptRules() []Rule {
 			Title:    "Unhandled promise rejection",
 			Description: "Promise chains without .catch() or async functions without try/catch can " +
 				"cause unexpected application behavior and hide security errors.",
-			Pattern: mustCompile(`\.then\s*\([^)]+\)\s*(?!\.catch)`),
-			OWASP:   config.OWASP_A10_MishandlingExceptionalConditions,
-			CWE:     "CWE-390",
-			CVSS:    3.7,
+			Pattern:     mustCompile(`\.then\s*\(`),
+			AntiPattern: mustCompile(`\.catch\s*\(`),
+			OWASP:       config.OWASP_A10_MishandlingExceptionalConditions,
+			CWE:         "CWE-390",
+			CVSS:        3.7,
 			References: []string{
 				"https://cwe.mitre.org/data/definitions/390.html",
 			},

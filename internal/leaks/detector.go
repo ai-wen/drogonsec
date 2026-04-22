@@ -559,11 +559,13 @@ func (d *Detector) loadRules() {
 	}
 }
 
-// mustCompile compiles a regex or returns never-matching pattern
+// mustCompile compiles a regex or returns never-matching pattern.
+// `$^` still matches empty strings (blank lines), so we use [^\s\S]
+// which cannot match any character.
 func mustCompile(pattern string) *regexp.Regexp {
 	re, err := regexp.Compile(pattern)
 	if err != nil {
-		return regexp.MustCompile(`$^`)
+		return regexp.MustCompile(`[^\s\S]`)
 	}
 	return re
 }

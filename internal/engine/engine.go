@@ -184,11 +184,13 @@ func buildSnippet(lines []string, lineNum, context int) string {
 	return strings.Join(lines[start:end], "\n")
 }
 
-// mustCompile compiles regex or returns a never-matching pattern on error
+// mustCompile compiles regex or returns a never-matching pattern on error.
+// The fallback uses [^\s\S] because `$^` still matches empty strings (blank
+// lines), which caused false positives for rules with invalid regex.
 func mustCompile(pattern string) *regexp.Regexp {
 	re, err := regexp.Compile(pattern)
 	if err != nil {
-		return regexp.MustCompile(`$^`) // never matches
+		return regexp.MustCompile(`[^\s\S]`) // truly never matches
 	}
 	return re
 }
