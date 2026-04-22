@@ -29,7 +29,7 @@ jobs:
       - name: Upload release assets
         uses: actions/upload-artifact@v4
         with:
-          files: |
-            bin/drogonsec-windows-amd64.exe
+          name: windows-binary
+          path: bin/drogonsec-windows-amd64.exe
  
 
