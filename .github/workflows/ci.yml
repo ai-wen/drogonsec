@@ -24,7 +24,7 @@ jobs:
           go-version: '1.25.9'
 
       - name: Build all platforms
-        run: make release
+        run: make build-windows
 
       - name: Create checksums
         run: |
@@ -35,10 +35,6 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            bin/drogonsec-linux-amd64
-            bin/drogonsec-darwin-amd64
-            bin/drogonsec-darwin-arm64
             bin/drogonsec-windows-amd64.exe
-            bin/SHA256SUMS.txt
  
 
