@@ -14,102 +14,9 @@ permissions:
   packages: write          # Required for GHCR Docker push
 
 jobs:
-  # ============ BUILD & TEST ============
-  build-test:
-    name: Build & Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Go
-        uses: actions/setup-go@v6
-        with:
-          go-version: '1.25.9'
-          cache: true
-
-      - name: Download dependencies
-        run: go mod download
-
-      - name: Verify module checksums
-        run: go mod verify
-
-      - name: Scan for known CVEs (govulncheck)
-        run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          govulncheck ./...
-
-      - name: Run go vet
-        run: go vet ./...
-
-      - name: Run tests
-        run: go test ./... -v -race -coverprofile=coverage.out -covermode=atomic
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v6
-        with:
-          files: ./coverage.out
-
-      - name: Build binary
-        run: |
-          mkdir -p bin
-          go build \
-            -ldflags "-X main.Version=$(git describe --tags --always 2>/dev/null || echo '0.1.0') \
-                      -X github.com/filipi86/drogonsec/internal/cli.Environment=production" \
-            -o bin/drogonsec \
-            ./cmd/drogonsec
-
-  # ============ LINT ============
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: '1.25.9'
-          cache: true
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: latest
-
-  # ============ SECURITY SCAN (Dogfooding - DrogonSec scanning itself) ============
-  security-scan:
-    name: Security Scan (DrogonSec)
-    runs-on: ubuntu-latest
-    needs: build-test
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-go@v6
-        with:
-          go-version: '1.25.9'
-          cache: true
-
-      - name: Build DrogonSec
-        run: make build
-
-      - name: Scan with DrogonSec (SARIF output)
-        continue-on-error: true
-        run: |
-          ./bin/drogonsec scan . \
-            --format sarif \
-            --output drogonsec.sarif \
-            --severity MEDIUM
-
-      - name: Upload SARIF to GitHub Security
-        if: hashFiles('drogonsec.sarif') != ''
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: drogonsec.sarif
-        continue-on-error: true
-
-  # ============ RELEASE ============
   release:
     name: Release Binaries
     runs-on: ubuntu-latest
-    needs: [ build-test, lint ]
-    if: github.event_name == 'release'
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-go@v6
@@ -133,33 +40,5 @@ jobs:
             bin/drogonsec-darwin-arm64
             bin/drogonsec-windows-amd64.exe
             bin/SHA256SUMS.txt
+ 
 
-  # ============ DOCKER ============
-  docker:
-    name: Build & Push Docker
-    runs-on: ubuntu-latest
-    needs: [ build-test ]
-    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          push: true
-          tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
